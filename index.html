@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyride Hungary - Repülési Időpont & Várólista Kezelő</title>
+    <style>
+        :root {
+            --primary-navy: #0f172a;
+            --sky-blue: #1e3a8a;
+            --brand-yellow: #ffb703;
+            --brand-gold: #fbbf24;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --purple: #8b5cf6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0b132b, #1c2541);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            border: 2px solid var(--brand-yellow);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-svg {
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+        }
+
+        .header-titles h1 {
+            margin: 0;
+            font-size: 1.7rem;
+            color: var(--brand-yellow);
+        }
+
+        .header-titles p {
+            margin: 4px 0 0 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+
+        .limit-pill {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .pill-item {
+            background: rgba(255, 183, 3, 0.15);
+            border: 1px solid var(--brand-yellow);
+            color: var(--brand-yellow);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            header { text-align: center; justify-content: center; }
+            .header-brand { flex-direction: column; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: var(--sky-blue);
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 8px;
+        }
+
+        label { display: block; margin-top: 10px; font-weight: 600; font-size: 0.85rem; }
+        input[type="text"], input[type="tel"], input[type="number"], input[type="date"], input[type="datetime-local"], select, textarea {
+            width: 100%;
+            padding: 9px 11px;
+            margin-top: 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .weather-box {
+            background: #e0f2fe;
+            border: 1px solid #0284c7;
+            color: #0369a1;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 12px;
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        button {
+            background-color: var(--sky-blue);
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 12px;
+            width: 100%;
+            font-size: 0.9rem;
+        }
+
+        button:hover { opacity: 0.9; }
+        button.btn-danger { background-color: var(--danger); }
+        button.btn-success { background-color: var(--success); }
+        button.btn-viber { background-color: #7360f2; }
+        button.btn-sms { background-color: #2563eb; }
+        button.btn-fetch { background-color: #0284c7; margin-top: 5px; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-active { background-color: var(--success); }
+        .badge-warn { background-color: var(--warning); }
+        .badge-nextseason { background-color: var(--danger); }
+
+        .age-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .age-green { background-color: var(--success); }
+        .age-yellow { background-color: var(--warning); }
+        .age-red { background-color: var(--danger); }
+
+        .tag-gift { background-color: #8b5cf6; color: white; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .tag-voucher { background-color: #ec4899; color: white; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+
+        .table-responsive { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            min-width: 850px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+        }
+
+        th { background-color: #f1f5f9; color: #475569; }
+
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .action-btns button {
+            margin: 0;
+            padding: 5px 8px;
+            font-size: 0.75rem;
+            width: auto;
+        }
+
+        .date-highlight {
+            color: #b91c1c;
+            font-weight: bold;
+            display: block;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-brand">
+            <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="100" cy="100" r="95" fill="#0d1b2a" stroke="#ffb703" stroke-width="6"/>
+                <path d="M 35 90 A 70 50 0 0 1 165 90" fill="none" stroke="#ffb703" stroke-width="20" stroke-linecap="round"/>
+                <line x1="45" y1="85" x2="80" y2="115" stroke="#ffb703" stroke-width="3"/>
+                <line x1="155" y1="85" x2="120" y2="115" stroke="#ffb703" stroke-width="3"/>
+                <path d="M 65 130 L 100 95 L 135 130 Z" fill="#ffffff"/>
+                <path d="M 20 100 Q 100 120 180 100 Q 100 135 20 100" fill="#0d1b2a" stroke="#ffb703" stroke-width="4"/>
+                <text x="100" y="112" font-family="Arial, sans-serif" font-weight="900" font-size="28" fill="#ffb703" text-anchor="middle" font-style="italic">Skyride</text>
+                <text x="100" y="155" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#ffffff" text-anchor="middle" letter-spacing="1">SKY IS THE LIMIT!</text>
+            </svg>
+            <div class="header-titles">
+                <h1>Skyride Hungary</h1>
+                <p>Repülési Időpont & Várólista Kezelő Rendszer</p>
+            </div>
+        </div>
+        <div class="limit-pill">
+            <span class="pill-item">⚖️ Max. 110 kg</span>
+            <span class="pill-item">🌅 Napnyugta -1.5h Előrejelzés</span>
+            <span class="pill-item">🧭 É / D szektor</span>
+            <span class="pill-item">💨 Max. 15 km/h</span>
+        </div>
+    </header>
+
+    <div class="grid">
+        <!-- 1. Új jelentkező -->
+        <div class="card">
+            <h2>➕ Új jelentkező regisztrációja</h2>
+            <form id="passengerForm">
+                <label for="name">Utas neve:</label>
+                <input type="text" id="name" required placeholder="Pl. Kovács Péter">
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label for="phone">Telefonszám:</label>
+                        <input type="tel" id="phone" required placeholder="+36301234567">
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="weight">Súly (kg) [Max 110]:</label>
+                        <input type="number" id="weight" max="110" placeholder="85" required>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label for="contactDate">📞 Kapcsolatfelvétel ideje:</label>
+                        <input type="date" id="contactDate" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="eventDate">🎂 Esemény dátuma (Opc.):</label>
+                        <input type="date" id="eventDate">
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="isGift"> 🎁 Meglepetés
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="needsVoucher"> 🎟️ Voucher
+                    </label>
+                </div>
+
+                <button type="submit">Hozzáadás & Rendszerezés</button>
+            </form>
+        </div>
+
+        <!-- 2. Repülési ablak -->
+        <div class="card">
+            <h2>🌤️ Repülési Ablak Előrejelzése (Napnyugta Sáv)</h2>
+            <div style="display:flex; gap:10px; align-items:flex-end;">
+                <div style="flex:1;">
+                    <label for="targetDateSelect">Célnap kiválasztása:</label>
+                    <input type="date" id="targetDateSelect">
+                </div>
+                <div style="flex:1;">
+                    <button type="button" class="btn-fetch" onclick="fetchTargetWindowForecast()">📊 Esti Előrejelzés Lekérése</button>
+                </div>
+            </div>
+            
+            <form id="slotForm" style="margin-top:15px;">
+                <label for="slotDate">Kiszámított Felszállási Időpont (Napnyugta -1.5 óra):</label>
+                <input type="datetime-local" id="slotDate" required>
+
+                <div id="weatherInfoBox" class="weather-box" style="display:none;">
+                    📍 <strong>Esti Előrejelzés a Start Időpontra:</strong><br>
+                    🌅 Napnyugta: <span id="liveSunset">-</span> | 🪂 Start ablak: <span id="targetTimeText">-</span><br>
+                    💨 Szél a startkor: <strong><span id="liveWindSpeed">-</span> km/h</strong> (Irány: <strong><span id="liveWindDirText">-</span></strong>)
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label for="windDir">Várható szélirány (Pálya):</label>
+                        <select id="windDir" required>
+                            <option value="N">⬆️ Északi (É) - Megfelelő</option>
+                            <option value="NNE">↗️ Észak-Északkeleti (ÉÉK) - Megfelelő</option>
+                            <option value="NNW">↖️ Észak-Északnyugati (ÉÉNy) - Megfelelő</option>
+                            <option value="S">⬇️ Déli (D) - Megfelelő</option>
+                            <option value="SSE">↘️ Dél-Délkeleti (DDK) - Megfelelő</option>
+                            <option value="SSW">↙️ Dél-Délnyugati (DDNy) - Megfelelő</option>
+                            <option value="E">➡️ Keleti (K) - ALKALMATLAN</option>
+                            <option value="W">⬅️ Nyugati (Ny) - ALKALMATLAN</option>
+                            <option value="NE">↗️ Északkeleti (ÉK) - ALKALMATLAN</option>
+                            <option value="SE">↘️ Délkeleti (DK) - ALKALMATLAN</option>
+                            <option value="NW">↖️ Északnyugati (ÉNy) - ALKALMATLAN</option>
+                            <option value="SW">↙️ Délnyugati (DNy) - ALKALMATLAN</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="wind">Várható szélerősség (km/h):</label>
+                        <input type="number" id="wind" required value="8" min="0" max="25">
+                    </div>
+                </div>
+
+                <button type="submit">Ablak Hirdetése & Üzenet Generálása</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Üzenet Generátor -->
+    <div class="card">
+        <h2>💬 SMS / Viber Üzenet Generátor</h2>
+        <textarea id="templateOutput" rows="3" readonly placeholder="Kattints egy utas melletti 'Értesít' gombra..."></textarea>
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+            <button class="btn-success" onclick="copyTemplate()">📋 Másolás Vágólapra</button>
+            <button class="btn-viber" onclick="openViberDirect()">📱 Megnyitás Viber-ben</button>
+            <button class="btn-sms" onclick="openSMSDirect()">💬 SMS Küldése</button>
+        </div>
+    </div>
+
+    <!-- 4. Utaslista -->
+    <div class="card">
+        <h2>📋 Prioritási Utaslista (Várakozási Idő & Színkódok)</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Név & Telefon</th>
+                        <th>Kapcsolatfelvétel</th>
+                        <th>Céldátum</th>
+                        <th>Súly</th>
+                        <th>Opciók</th>
+                        <th>Elutasítva</th>
+                        <th>Státusz</th>
+                        <th>Műveletek</th>
+                    </tr>
+                </thead>
+                <tbody id="passengerTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("contactDate").value = new Date().toISOString().split('T')[0];
+    document.getElementById("targetDateSelect").value = new Date().toISOString().split('T')[0];
+
+    const LATITUDE = 46.63;
+    const LONGITUDE = 18.86;
+
+    let defaultPassengers = [
+        { id: 1, name: "Kovács Béla", phone: "+36301234567", weight: 82, contactDate: "2026-08-10", eventDate: "2026-09-05", isGift: true, needsVoucher: true, declines: 0, status: "Aktív" },
+        { id: 2, name: "Szabó Gábor", phone: "+36301112233", weight: 80, contactDate: "2026-07-01", eventDate: "", isGift: false, needsVoucher: true, declines: 0, status: "Aktív" },
+        { id: 3, name: "Nagy Anna", phone: "+36204445566", weight: 62, contactDate: "2026-05-15", eventDate: "2026-09-20", isGift: true, needsVoucher: true, declines: 2, status: "Figyelmeztetett" },
+        { id: 4, name: "Tóth István", phone: "+36707778899", weight: 95, contactDate: "2026-04-10", eventDate: "", isGift: false, needsVoucher: false, declines: 3, status: "2027 Tavaszra áttolva" }
+    ];
+
+    let passengers = JSON.parse(localStorage.getItem('skyride_passengers')) || defaultPassengers;
+    let lastSlot = { date: "", wind: 0, windDir: "" };
+    let currentSelectedPhone = "";
+
+    function degreesToCompass(deg) {
+        const val = Math.floor((deg / 22.5) + 0.5);
+        const arr = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+        return arr[(val % 16)];
+    }
+
+    async function fetchTargetWindowForecast() {
+        try {
+            const selectedDateStr = document.getElementById("targetDateSelect").value;
+            if(!selectedDateStr) return;
+
+            // Órás előrejelzés és napnyugta kérése az Open-Meteo-tól
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&hourly=windspeed_10m,winddirection_10m&daily=sunset&timezone=auto&start_date=${selectedDateStr}&end_date=${selectedDateStr}`);
+            const data = await res.json();
+
+            if(!data.daily || !data.daily.sunset || data.daily.sunset.length === 0) {
+                alert("Erre a napra jelenleg nem érhető el előrejelzés.");
+                return;
+            }
+
+            const sunsetISO = data.daily.sunset[0];
+            const sunsetDate = new Date(sunsetISO);
+            
+            // Felszállási célidő: Napnyugta előtt 1,5 óra (90 perc)
+            const flightTime = new Date(sunsetDate.getTime() - (90 * 60 * 1000));
+            
+            // Keresük meg a legközelebbi órás előrejelzési adatot az hourly tömbben
+            const hourlyTimes = data.hourly.time;
+            const targetHourISO = flightTime.toISOString().slice(0, 13) + ":00"; // Kerek óra string matches
+            
+            let targetIndex = hourlyTimes.findIndex(t => t.startsWith(selectedDateStr) && new Date(t).getHours() === flightTime.getHours());
+            if (targetIndex === -1) targetIndex = Math.floor(hourlyTimes.length / 2); // Tartalék index
+
+            const windSpeed = Math.round(data.hourly.windspeed_10m[targetIndex]);
+            const windDeg = data.hourly.winddirection_10m[targetIndex];
+            const compassDir = degreesToCompass(windDeg);
+
+            // Formázás input mezőhöz
+            const localIso = new Date(flightTime.getTime() - (flightTime.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            document.getElementById("slotDate").value = localIso;
+
+            document.getElementById("wind").value = windSpeed;
+            document.getElementById("windDir").value = compassDir;
+
+            document.getElementById("liveWindSpeed").innerText = windSpeed;
+            document.getElementById("liveWindDirText").innerText = compassDir;
+            document.getElementById("liveSunset").innerText = sunsetDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById("targetTimeText").innerText = flightTime.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+            
+            document.getElementById("weatherInfoBox").style.display = "block";
+
+            alert(`✅ Esti előrejelzés sikeresen betöltve a napnyugta előtti időszakra!`);
+        } catch (err) {
+            alert("⚠️ Az előrejelzési adatok lekérése sikertelen. Ellenőrizd az internetkapcsolatot!");
+        }
+    }
+
+    function savePassengers() {
+        localStorage.setItem('skyride_passengers', JSON.stringify(passengers));
+    }
+
+    function calculateAgeBadge(contactDateStr) {
+        if (!contactDateStr) return `<span class="age-badge age-green">< 1 hónap</span>`;
+        
+        const contactDate = new Date(contactDateStr);
+        const today = new Date();
+        const diffTime = Math.abs(today - contactDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 30) {
+            return `<span class="age-badge age-green">🟢 Friss (${diffDays} n.)</span>`;
+        } else if (diffDays <= 60) {
+            return `<span class="age-badge age-yellow">🟡 1-2 hónap (${diffDays} n.)</span>`;
+        } else {
+            return `<span class="age-badge age-red">🔴 2+ hónap (${diffDays} n.)</span>`;
+        }
+    }
+
+    function sortPassengers() {
+        passengers.sort((a, b) => {
+            if (a.declines >= 3 && b.declines < 3) return 1;
+            if (b.declines >= 3 && a.declines < 3) return -1;
+
+            if (a.eventDate && !b.eventDate) return -1;
+            if (!a.eventDate && b.eventDate) return 1;
+            if (a.eventDate && b.eventDate) {
+                return new Date(a.eventDate) - new Date(b.eventDate);
+            }
+
+            return new Date(a.contactDate) - new Date(b.contactDate);
+        });
+    }
+
+    function renderPassengers() {
+        sortPassengers();
+        const tbody = document.getElementById("passengerTable");
+        tbody.innerHTML = "";
+
+        passengers.forEach(p => {
+            let badgeClass = "badge-active";
+            if (p.declines === 2) badgeClass = "badge-warn";
+            if (p.declines >= 3) badgeClass = "badge-nextseason";
+
+            let optionsTags = "";
+            if (p.isGift) optionsTags += '<span class="tag-gift">🎁 Meglepetés</span> ';
+            if (p.needsVoucher) optionsTags += '<span class="tag-voucher">🎟️ Voucher</span>';
+            if (!optionsTags) optionsTags = '-';
+
+            let eventText = "-";
+            if (p.eventDate) {
+                const formattedEvDate = new Date(p.eventDate).toLocaleDateString('hu-HU');
+                eventText = `<span class="date-highlight">🎂 ${formattedEvDate}</span>`;
+            }
+
+            let contactDateFormatted = p.contactDate ? new Date(p.contactDate).toLocaleDateString('hu-HU') : '-';
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>${p.name}</strong><br><small style="color:#64748b">${p.phone}</small></td>
+                <td>${contactDateFormatted}<br>${calculateAgeBadge(p.contactDate)}</td>
+                <td>${eventText}</td>
+                <td>${p.weight ? p.weight + ' kg' : '-'}</td>
+                <td>${optionsTags}</td>
+                <td>${p.declines} / 3</td>
+                <td><span class="badge ${badgeClass}">${p.status}</span></td>
+                <td>
+                    <div class="action-btns">
+                        <button onclick="registerDecline(${p.id})" ${p.declines >= 3 ? 'disabled' : ''}>❌ Elutasít</button>
+                        <button onclick="generateSingleNotify(${p.id})">📲 Értesít</button>
+                        <button class="btn-danger" onclick="removePassenger(${p.id})">Törlés</button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById("passengerForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const weightVal = parseFloat(document.getElementById("weight").value);
+
+        if (weightVal > 110) {
+            alert(`⛔ SÚLYHATÁR TÚLLÉPÉS!\nA maximális megengedett utas súly 110 kg.`);
+            return;
+        }
+
+        passengers.push({
+            id: Date.now(),
+            name: document.getElementById("name").value,
+            phone: document.getElementById("phone").value,
+            weight: weightVal,
+            contactDate: document.getElementById("contactDate").value,
+            eventDate: document.getElementById("eventDate").value,
+            isGift: document.getElementById("isGift").checked,
+            needsVoucher: document.getElementById("needsVoucher").checked,
+            declines: 0,
+            status: "Aktív"
+        });
+        savePassengers();
+        this.reset();
+        document.getElementById("contactDate").value = new Date().toISOString().split('T')[0];
+        renderPassengers();
+    });
+
+    function registerDecline(id) {
+        const p = passengers.find(item => item.id === id);
+        if (p) {
+            p.declines += 1;
+            if (p.declines === 2) {
+                p.status = "Figyelmeztetett";
+                generateDeclineWarningMsg(p);
+            } else if (p.declines >= 3) {
+                p.status = "2027 Tavaszra áttolva";
+                generateSeasonPostponeMsg(p);
+            }
+            savePassengers();
+            renderPassengers();
+        }
+    }
+
+    function removePassenger(id) {
+        if (confirm("Biztosan törölni szeretnéd ezt az utast?")) {
+            passengers = passengers.filter(p => p.id !== id);
+            savePassengers();
+            renderPassengers();
+        }
+    }
+
+    document.getElementById("slotForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const wind = parseFloat(document.getElementById("wind").value);
+        const windDir = document.getElementById("windDir").value;
+        const slotDateVal = document.getElementById("slotDate").value;
+
+        const allowedDirections = ["N", "NNE", "NNW", "S", "SSE", "SSW"];
+
+        if (!allowedDirections.includes(windDir)) {
+            alert(`⛔ PÁLYA KORLÁTOZÁS!\nA megadott szélirány a pálya adottságai miatt nem biztonságos. Csak Északi (É, ÉÉK, ÉÉNy) vagy Déli (D, DDK, DDNy) szektorokban nyitható ablak!`);
+            return;
+        }
+
+        if (wind > 15) {
+            alert(`⛔ BIZTONSÁGI LIMIT TÚLLÉPÉS!\n15 km/h feletti szélben nem nyitható ablak.`);
+            return;
+        }
+
+        const formattedDate = new Date(slotDateVal).toLocaleString('hu-HU', { dateStyle: 'short', timeStyle: 'short' });
+        lastSlot = { date: formattedDate, wind: wind, windDir: windDir };
+
+        const msg = `Szia! Új repülési ablak nyílt: ${formattedDate}. A szabad helyek érkezési és prioritási sorrendben foglalhatók! Visszajelzést kérek, ha jönni szeretnél. Skyride Hungary`;
+        document.getElementById("templateOutput").value = msg;
+        alert(`✅ Repülési ablak sikeresen ellenőrizve és meghirdetve!`);
+    });
+
+    function generateSingleNotify(id) {
+        const p = passengers.find(item => item.id === id);
+        currentSelectedPhone = p.phone;
+        if (!lastSlot.date) {
+            alert("Először nyiss egy repülési ablakot fent!");
+            return;
+        }
+        let dateNote = p.eventDate ? ` (Tudom, hogy közeleg az alkalmi dátumod: ${p.eventDate})` : '';
+        const msg = `Szia ${p.name}! Megnyílt egy új repülési időpont: ${lastSlot.date}.${dateNote} Megfelelő lenne számodra? Skyride Hungary`;
+        document.getElementById("templateOutput").value = msg;
+    }
+
+    function generateDeclineWarningMsg(p) {
+        currentSelectedPhone = p.phone;
+        const msg = `Szia ${p.name}! Ez volt a 2. időpont, ami nem volt megfelelő. Mivel a szezonzárás közeleg, a 3. elutasítás után a foglalást át kell tennünk 2027 tavaszára. Skyride Hungary`;
+        document.getElementById("templateOutput").value = msg;
+    }
+
+    function generateSeasonPostponeMsg(p) {
+        currentSelectedPhone = p.phone;
+        const msg = `Szia ${p.name}! Mivel az idei repülhető ablakok száma lejár, és 3 alkalommal sem sikerült megfelelő időpontot találnunk, a garantált helyedet átadtuk. A foglalásodat automatikusan átvittük 2027 tavaszára! Skyride Hungary`;
+        document.getElementById("templateOutput").value = msg;
+    }
+
+    function copyTemplate() {
+        const txt = document.getElementById("templateOutput");
+        if (!txt.value) return;
+        txt.select();
+        navigator.clipboard.writeText(txt.value);
+        alert("📋 Üzenet a vágólapra másolva!");
+    }
+
+    function openViberDirect() {
+        const txt = document.getElementById("templateOutput").value;
+        if (!txt) { alert("Először generálj egy üzenetet!"); return; }
+        window.location.href = `viber://forward?text=${encodeURIComponent(txt)}`;
+    }
+
+    function openSMSDirect() {
+        const txt = document.getElementById("templateOutput").value;
+        if (!txt) { alert("Először generálj egy üzenetet!"); return; }
+        window.location.href = `sms:${currentSelectedPhone}?body=${encodeURIComponent(txt)}`;
+    }
+
+    renderPassengers();
+</script>
+
+</body>
+</html>
