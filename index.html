@@ -406,8 +406,8 @@
     document.getElementById("contactDate").value = new Date().toISOString().split('T')[0];
     document.getElementById("targetDateSelect").value = new Date().toISOString().split('T')[0];
 
-    const LATITUDE = 46.63;
-    const LONGITUDE = 18.86;
+    const LATITUDE = 46.605389;
+    const LONGITUDE = 18.715306;
 
     let defaultPassengers = [
         { id: 1, name: "Kovács Béla", phone: "+36301234567", weight: 82, contactDate: "2026-08-10", eventDate: "2026-09-05", isGift: true, needsVoucher: true, declines: 0, status: "Aktív" },
@@ -424,15 +424,12 @@
         const val = Math.floor((deg / 22.5) + 0.5);
         const arr = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
         return arr[(val % 16)];
-    }
-
-    async function fetchTargetWindowForecast() {
+        async function fetchTargetWindowForecast() {
         try {
             const selectedDateStr = document.getElementById("targetDateSelect").value;
             if(!selectedDateStr) return;
 
-            // Órás előrejelzés és napnyugta kérése az Open-Meteo-tól
-            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&hourly=windspeed_10m,winddirection_10m&daily=sunset&timezone=auto&start_date=${selectedDateStr}&end_date=${selectedDateStr}`);
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&hourly=windspeed_10m,winddirection_10m,windgusts_10m&daily=sunset&timezone=auto&start_date=${selectedDateStr}&end_date=${selectedDateStr}`);
             const data = await res.json();
 
             if(!data.daily || !data.daily.sunset || data.daily.sunset.length === 0) {
@@ -443,21 +440,17 @@
             const sunsetISO = data.daily.sunset[0];
             const sunsetDate = new Date(sunsetISO);
             
-            // Felszállási célidő: Napnyugta előtt 1,5 óra (90 perc)
             const flightTime = new Date(sunsetDate.getTime() - (90 * 60 * 1000));
             
-            // Keresük meg a legközelebbi órás előrejelzési adatot az hourly tömbben
             const hourlyTimes = data.hourly.time;
-            const targetHourISO = flightTime.toISOString().slice(0, 13) + ":00"; // Kerek óra string matches
-            
             let targetIndex = hourlyTimes.findIndex(t => t.startsWith(selectedDateStr) && new Date(t).getHours() === flightTime.getHours());
-            if (targetIndex === -1) targetIndex = Math.floor(hourlyTimes.length / 2); // Tartalék index
+            if (targetIndex === -1) targetIndex = Math.floor(hourlyTimes.length / 2);
 
             const windSpeed = Math.round(data.hourly.windspeed_10m[targetIndex]);
+            const windGusts = Math.round(data.hourly.windgusts_10m[targetIndex]);
             const windDeg = data.hourly.winddirection_10m[targetIndex];
             const compassDir = degreesToCompass(windDeg);
 
-            // Formázás input mezőhöz
             const localIso = new Date(flightTime.getTime() - (flightTime.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
             document.getElementById("slotDate").value = localIso;
 
@@ -465,7 +458,21 @@
             document.getElementById("windDir").value = compassDir;
 
             document.getElementById("liveWindSpeed").innerText = windSpeed;
+            if(document.getElementById("liveWindGusts")) {
+                document.getElementById("liveWindGusts").innerText = windGusts;
+            }
             document.getElementById("liveWindDirText").innerText = compassDir;
+            document.getElementById("liveSunset").innerText = sunsetDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById("targetTimeText").innerText = flightTime.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+            
+            document.getElementById("weatherInfoBox").style.display = "block";
+
+            alert(`✅ Esti előrejelzés sikeresen betöltve a pusztahencsei starthelyre!`);
+        } catch (err) {
+            alert("⚠️ Az előrejelzési adatok lekérése sikertelen.");
+        }
+    }
+
             document.getElementById("liveSunset").innerText = sunsetDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
             document.getElementById("targetTimeText").innerText = flightTime.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
             
