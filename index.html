@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Skyride Hungary – Pilot Dashboard</title>
+  <title>Skyride Hungary – Pilot Dashboard Pro</title>
   <style>
     :root {
       --primary-navy: #0f172a;
@@ -15,7 +15,6 @@
       --border: #e2e8f0;
       --danger: #ef4444;
       --success: #10b981;
-      --purple: #8b5cf6;
     }
 
     body {
@@ -136,9 +135,8 @@
       opacity: 0.9;
     }
 
-    .btn-secondary {
-      background: var(--primary-navy);
-    }
+    .btn-secondary { background: var(--primary-navy); }
+    .btn-parse { background: #8b5cf6; }
 
     .info-box {
       background: #f0f9ff;
@@ -190,17 +188,9 @@
       border-radius: 4px;
     }
 
-    .tag-gift {
-      background: #fce7f3;
-      color: #be185d;
-      border: 1px solid #fbcfe8;
-    }
-
-    .tag-voucher {
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fde68a;
-    }
+    .tag-gift { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
+    .tag-voucher { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .tag-weight { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
     .passenger-details {
       font-size: 0.85rem;
@@ -221,16 +211,19 @@
     }
 
     .btn-danger { background-color: var(--danger); }
+    .btn-call { background-color: var(--success); }
 
     .flex-row {
       display: flex;
       gap: 8px;
     }
 
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+    .parser-box {
+      background: #f3e8ff;
+      border: 1px solid #ddd6fe;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 12px;
     }
   </style>
 </head>
@@ -241,7 +234,7 @@
   <!-- FEJLÉC ÉS LOGÓ -->
   <div class="header">
     <div class="logo-text">SKYRIDE <span>HUNGARY</span></div>
-    <div class="subtitle">Pilóta Dashboard & Utaskezelő Rendszer</div>
+    <div class="subtitle">Pilóta Dashboard & Utaskezelő Rendszer Pro</div>
   </div>
 
   <!-- 1. METEO ÉS ELŐREJELZÉS KÁRTYA -->
@@ -269,38 +262,49 @@
       <option value="ÉNY - DK">↖️ ÉNY - DK</option>
     </select>
 
-    <button type="button" class="btn-secondary" onclick="generateBroadcastMessage()">Ablak Hirdetése (Összes utasnak)</button>
+    <button type="button" class="btn-secondary" onclick="generateBroadcastMessage()">Kör SMS / Messenger Sablon</button>
   </div>
 
-  <!-- 2. ÚJ UTAS FELVÉTELE KÁRTYA -->
+  <!-- 2. ÚJ UTAS FELVÉTELE ÉS SMART PARSER KÁRTYA -->
   <div class="card">
     <h2>➕ Új Utas Felvétele</h2>
-    <input type="text" id="newPassengerName" placeholder="Utas neve..." style="margin-bottom:8px;">
-    
-    <div class="grid-2">
-      <div>
-        <label for="newRegDate">Regisztráció dátuma:</label>
-        <input type="date" id="newRegDate">
+
+    <!-- SMART PARSER MEZŐ -->
+    <div class="parser-box">
+      <label style="margin-top:0; color:#5b21b6;">⚡ Gyors beillesztés Messenger / SMS válaszból:</label>
+      <textarea id="rawMessageInput" placeholder="Illeszd be ide a megrendelő üzenetét..."></textarea>
+      <button type="button" class="btn-parse" onclick="parseIncomingMessage()">⚡ Mezők kitöltése üzenetből</button>
+    </div>
+
+    <div class="flex-row">
+      <div style="flex:2;">
+        <label for="newPassengerName">Utas neve:</label>
+        <input type="text" id="newPassengerName" placeholder="pl. Kovács János">
       </div>
-      <div>
+      <div style="flex:1;">
         <label for="newWeight">Súly (kg):</label>
-        <input type="number" id="newWeight" placeholder="85">
+        <input type="number" id="newWeight" placeholder="75">
       </div>
     </div>
+
+    <label for="newPhone">Telefonszám:</label>
+    <input type="tel" id="newPhone" placeholder="pl. +36301234567">
+
+    <label for="newRegDate">Regisztráció dátuma:</label>
+    <input type="date" id="newRegDate">
+
+    <label for="newPreferredPeriod">Tervezett repülési időszak / Preferencia:</label>
+    <input type="text" id="newPreferredPeriod" placeholder="pl. Augusztus közepe, hétvége">
 
     <label for="newNote">Megjegyzés:</label>
     <input type="text" id="newNote" placeholder="pl. Különleges kérés...">
 
     <div class="checkbox-group">
-      <label class="checkbox-label">
-        <input type="checkbox" id="newIsGift"> 🎁 Ajándékba lesz
-      </label>
-      <label class="checkbox-label">
-        <input type="checkbox" id="newIsVoucher"> 🎟️ Voucher kártya igénylés
-      </label>
+      <label class="checkbox-label"><input type="checkbox" id="newIsGift"> 🎁 Ajándék</label>
+      <label class="checkbox-label"><input type="checkbox" id="newIsVoucher"> 🎟️ Voucher</label>
     </div>
 
-    <button type="button" onclick="addPassenger()">Utas Hozzáadása</button>
+    <button type="button" onclick="addPassenger()">Utas Hozzáadása a Várólistára</button>
   </div>
 
   <!-- 3. UTASOK RANGSORA KÁRTYA -->
@@ -311,9 +315,12 @@
 
   <!-- 4. ÜZENET GENERÁTOR -->
   <div class="card">
-    <h2>💬 SMS / Viber Üzenet</h2>
-    <textarea id="outputMsg" placeholder="Kattints egy utas melletti 'SMS' gombra..."></textarea>
-    <button type="button" onclick="copyMessage()">Üzenet Másolása</button>
+    <h2>💬 Üzenet Sablon Generátor</h2>
+    <div class="flex-row" style="margin-bottom:8px;">
+      <button type="button" class="btn-secondary" onclick="generateDataRequestTemplate()">📋 Adatbekérő Sablon</button>
+    </div>
+    <textarea id="outputMsg" placeholder="A generált üzenet itt jelenik meg..."></textarea>
+    <button type="button" onclick="copyMessage()">Szöveg Másolása</button>
   </div>
 
 </div>
@@ -324,8 +331,7 @@
 
     let currentForecast = null;
     let passengers = JSON.parse(localStorage.getItem('skyride_passengers')) || [
-        { id: 1, name: "Kovács Béla", regDate: "2026-07-15", weight: 85, note: "Páros meglepetés", isGift: true, isVoucher: true, declines: 0 },
-        { id: 2, name: "Szabó Gábor", regDate: "2026-08-01", weight: 92, note: "Magának vette", isGift: false, isVoucher: false, declines: 1 }
+        { id: 1, name: "Kovács Béla", phone: "+36301234567", weight: 82, regDate: "2026-07-15", preferredPeriod: "Bármikor", note: "Páros meglepetés", isGift: true, isVoucher: true, rotations: 0 }
     ];
 
     document.getElementById("targetDateSelect").valueAsDate = new Date();
@@ -403,21 +409,25 @@
             item.className = "passenger-card";
             item.innerHTML = `
                 <div class="passenger-header">
-                    <span>${p.name} (${p.weight || '?'} kg)</span>
+                    <span>${p.name}</span>
                     <span class="wait-badge ${badgeClass}">${waitDays} napja vár</span>
                 </div>
                 <div class="tag-container">
+                    ${p.weight ? `<span class="tag-badge tag-weight">⚖️ ${p.weight} kg</span>` : ''}
                     ${p.isGift ? '<span class="tag-badge tag-gift">🎁 Ajándék</span>' : ''}
-                    ${p.isVoucher ? '<span class="tag-badge tag-voucher">🎟️ Voucher kártya</span>' : ''}
+                    ${p.isVoucher ? '<span class="tag-badge tag-voucher">🎟️ Voucher</span>' : ''}
                 </div>
                 <div class="passenger-details">
-                    📅 Jelentkezett: ${p.regDate}<br>
+                    📞 Tel: ${p.phone || 'Nincs megadva'}<br>
+                    📅 Regisztráció: ${p.regDate}<br>
+                    🗓️ Tervezett időszak: ${p.preferredPeriod || 'Nincs megadva'}<br>
                     📝 Megjegyzés: ${p.note || 'Nincs'}<br>
-                    ❌ Elutasítva/Lemondva: ${p.declines || 0} alkalom
+                    🔄 Sor végére küldve: ${p.rotations || 0} alkalommal
                 </div>
                 <div class="btn-group">
-                    <button class="btn-small" onclick="generateDirectSMS('${p.name}')">📱 SMS Értesítés</button>
-                    <button class="btn-small btn-secondary" onclick="incrementDecline(${p.id})">+1 Lemondás</button>
+                    ${p.phone ? `<a href="tel:${p.phone}" style="text-decoration:none;"><button class="btn-small btn-call">📞 Hívás</button></a>` : ''}
+                    <button class="btn-small" onclick="generateDirectMessage('${p.name}')">📱 Üzenet</button>
+                    <button class="btn-small btn-secondary" onclick="rotateToBottom(${p.id})">🔄 Sor végére</button>
                     <button class="btn-small btn-danger" onclick="removePassenger(${p.id})">✕ Törlés</button>
                 </div>
             `;
@@ -429,37 +439,76 @@
 
     function addPassenger() {
         const nameInput = document.getElementById("newPassengerName");
-        const regDateInput = document.getElementById("newRegDate");
         const weightInput = document.getElementById("newWeight");
+        const phoneInput = document.getElementById("newPhone");
+        const regDateInput = document.getElementById("newRegDate");
+        const periodInput = document.getElementById("newPreferredPeriod");
         const noteInput = document.getElementById("newNote");
-        const isGiftInput = document.getElementById("newIsGift");
-        const isVoucherInput = document.getElementById("newIsVoucher");
 
         if(!nameInput.value.trim()) return alert("Kérlek, add meg az utas nevét!");
 
         passengers.push({
             id: Date.now(),
             name: nameInput.value.trim(),
+            weight: weightInput.value ? parseInt(weightInput.value) : '',
+            phone: phoneInput.value.trim() || '',
             regDate: regDateInput.value || new Date().toISOString().split('T')[0],
-            weight: weightInput.value || '',
+            preferredPeriod: periodInput.value.trim() || '',
             note: noteInput.value.trim() || '',
-            isGift: isGiftInput.checked,
-            isVoucher: isVoucherInput.checked,
-            declines: 0
+            isGift: document.getElementById("newIsGift").checked,
+            isVoucher: document.getElementById("newIsVoucher").checked,
+            rotations: 0
         });
 
+        // Mezők alaphelyzetbe
         nameInput.value = "";
-        noteInput.value = "";
         weightInput.value = "";
-        isGiftInput.checked = false;
-        isVoucherInput.checked = false;
+        phoneInput.value = "";
+        periodInput.value = "";
+        noteInput.value = "";
+        document.getElementById("rawMessageInput").value = "";
+        document.getElementById("newIsGift").checked = false;
+        document.getElementById("newIsVoucher").checked = false;
+        
         renderPassengers();
     }
 
-    function incrementDecline(id) {
+    function parseIncomingMessage() {
+        const text = document.getElementById("rawMessageInput").value;
+        if (!text.trim()) return alert("Először illeszd be az üzenetet!");
+
+        const lines = text.split('\n');
+        
+        lines.forEach(line => {
+            const lower = line.toLowerCase();
+            
+            if (lower.includes("név:") || lower.includes("nev:")) {
+                document.getElementById("newPassengerName").value = line.split(":")[1]?.trim() || "";
+            } else if (lower.includes("súly") || lower.includes("suly")) {
+                const match = line.match(/\d+/);
+                if (match) document.getElementById("newWeight").value = match[0];
+            } else if (lower.includes("tel") || lower.includes("szám") || lower.includes("szam")) {
+                const match = line.match(/[\+\d\s]{8,}/);
+                if (match) document.getElementById("newPhone").value = match[0].trim();
+            } else if (lower.includes("tervezett") || lower.includes("időszak") || lower.includes("idoszak")) {
+                document.getElementById("newPreferredPeriod").value = line.split(":")[1]?.trim() || "";
+            } else if (lower.includes("ajándék") || lower.includes("ajandek")) {
+                document.getElementById("newIsGift").checked = lower.includes("igen");
+            } else if (lower.includes("voucher")) {
+                document.getElementById("newIsVoucher").checked = lower.includes("igen");
+            } else if (lower.includes("megjegyzés") || lower.includes("megjegyzes")) {
+                document.getElementById("newNote").value = line.split(":")[1]?.trim() || "";
+            }
+        });
+
+        alert("✅ Mezők kitöltve! Ellenőrizd az adatokat, majd nyomj az 'Utas Hozzáadása' gombra.");
+    }
+
+    function rotateToBottom(id) {
         const p = passengers.find(item => item.id === id);
         if(p) {
-            p.declines = (p.declines || 0) + 1;
+            p.regDate = new Date().toISOString().split('T')[0];
+            p.rotations = (p.rotations || 0) + 1;
             renderPassengers();
         }
     }
@@ -471,20 +520,25 @@
         }
     }
 
+    function generateDataRequestTemplate() {
+        const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak (pl. augusztus közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:`;
+        document.getElementById("outputMsg").value = msg;
+    }
+
     function generateBroadcastMessage() {
         const dateStr = document.getElementById("targetDateSelect").value;
         const runway = document.getElementById("runwayDir").value;
         const timeStr = currentForecast ? currentForecast.flightTime : 'az esti órákban';
         const windStr = currentForecast ? `${currentForecast.windSpeed} km/h (pöffök: ${currentForecast.windGusts} km/h, ${currentForecast.compassDir})` : 'kedvező';
 
-        const msg = `Szia! A Skyride Hungary repülési ablakot hirdet ${dateStr}-án kb. ${timeStr}-tól. Várható szél: ${windStr}, pályairány: ${runway}. Jelkezz, ha szeretnél repülni!`;
+        const msg = `Szia! A Skyride Hungary repülési ablakot hirdet ${dateStr}-án kb. ${timeStr}-tól. Várható szél: ${windStr}, pályairány: ${runway}. Jelezz vissza, ha szeretnél repülni!`;
         document.getElementById("outputMsg").value = msg;
     }
 
-    function generateDirectSMS(name) {
+    function generateDirectMessage(name) {
         const dateStr = document.getElementById("targetDateSelect").value;
         const timeStr = currentForecast ? currentForecast.flightTime : 'az esti órákban';
-        const msg = `Szia ${name}! A Skyride repülésed időpontja ${dateStr}-án várhatóan ${timeStr}-kor lesz. Kérlek jelezz vissza, ha megfelel az időpont!`;
+        const msg = `Szia ${name}! A Skyride repülésed időpontja ${dateStr}-án várhatóan ${timeStr}-kor lesz. Kérlek jelezz vissza, ha megfelel neked!`;
         document.getElementById("outputMsg").value = msg;
     }
 
@@ -493,7 +547,7 @@
         if(!textarea.value) return;
         textarea.select();
         document.execCommand("copy");
-        alert("Üzenet kimásolva a vágólapra!");
+        alert("Üzenet másolva a vágólapra!");
     }
 </script>
 
