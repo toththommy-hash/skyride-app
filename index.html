@@ -460,7 +460,6 @@
             rotations: 0
         });
 
-        // Mezők alaphelyzetbe
         nameInput.value = "";
         weightInput.value = "";
         phoneInput.value = "";
@@ -477,26 +476,74 @@
         const text = document.getElementById("rawMessageInput").value;
         if (!text.trim()) return alert("Először illeszd be az üzenetet!");
 
-        const lines = text.split('\n');
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
         
-        lines.forEach(line => {
+        let foundName = false;
+        let foundWeight = false;
+        let foundPhone = false;
+        let foundPeriod = false;
+
+        lines.forEach((line, index) => {
             const lower = line.toLowerCase();
-            
-            if (lower.includes("név:") || lower.includes("nev:")) {
-                document.getElementById("newPassengerName").value = line.split(":")[1]?.trim() || "";
-            } else if (lower.includes("súly") || lower.includes("suly")) {
-                const match = line.match(/\d+/);
-                if (match) document.getElementById("newWeight").value = match[0];
-            } else if (lower.includes("tel") || lower.includes("szám") || lower.includes("szam")) {
+
+            // 1. TELEFONSZÁM
+            if (!foundPhone && (lower.includes("+36") || lower.includes("06") || line.replace(/\s+/g, '').match(/^\+?\d{9,12}$/))) {
                 const match = line.match(/[\+\d\s]{8,}/);
-                if (match) document.getElementById("newPhone").value = match[0].trim();
-            } else if (lower.includes("tervezett") || lower.includes("időszak") || lower.includes("idoszak")) {
-                document.getElementById("newPreferredPeriod").value = line.split(":")[1]?.trim() || "";
-            } else if (lower.includes("ajándék") || lower.includes("ajandek")) {
+                if (match) {
+                    document.getElementById("newPhone").value = match[0].trim();
+                    foundPhone = true;
+                    return;
+                }
+            }
+
+            // 2. SÚLY
+            if (!foundWeight && (lower.includes("kg") || lower.includes("suly") || lower.includes("súly") || (!isNaN(parseInt(line)) && parseInt(line) > 30 && parseInt(line) < 150))) {
+                const match = line.match(/\d+/);
+                if (match) {
+                    document.getElementById("newWeight").value = match[0];
+                    foundWeight = true;
+                    return;
+                }
+            }
+
+            // 3. AJÁNDÉK ÉS VOUCHER
+            if (lower.includes("ajándék") || lower.includes("ajandek")) {
                 document.getElementById("newIsGift").checked = lower.includes("igen");
-            } else if (lower.includes("voucher")) {
+                return;
+            }
+            if (lower.includes("voucher")) {
                 document.getElementById("newIsVoucher").checked = lower.includes("igen");
-            } else if (lower.includes("megjegyzés") || lower.includes("megjegyzes")) {
+                return;
+            }
+
+            // 4. NÉV
+            if (!foundName) {
+                if (lower.includes("név:") || lower.includes("nev:")) {
+                    document.getElementById("newPassengerName").value = line.split(":")[1]?.trim() || "";
+                    foundName = true;
+                    return;
+                } else if (index === 0 && !/\d/.test(line)) { 
+                    document.getElementById("newPassengerName").value = line;
+                    foundName = true;
+                    return;
+                }
+            }
+
+            // 5. TERVEZETT IDŐSZAK
+            if (!foundPeriod) {
+                if (lower.includes("tervezett") || lower.includes("időszak") || lower.includes("idoszak")) {
+                    document.getElementById("newPreferredPeriod").value = line.split(":")[1]?.trim() || "";
+                    foundPeriod = true;
+                    return;
+                } else if (foundName && foundPhone && !lower.includes("megjegyzés")) {
+                    document.getElementById("newPreferredPeriod").value = line;
+                    foundPeriod = true;
+                    return;
+                }
+            }
+
+            // 6. MEGJEGYZÉS
+            if (lower.includes("megjegyzés") || lower.includes("megjegyzes")) {
                 document.getElementById("newNote").value = line.split(":")[1]?.trim() || "";
             }
         });
