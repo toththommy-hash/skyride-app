@@ -231,13 +231,11 @@
 
 <div class="container">
 
-  <!-- FEJLÉC ÉS LOGÓ -->
   <div class="header">
     <div class="logo-text">SKYRIDE <span>HUNGARY</span></div>
     <div class="subtitle">Pilóta Dashboard & Utaskezelő Rendszer Pro</div>
   </div>
 
-  <!-- 1. METEO ÉS ELŐREJELZÉS KÁRTYA -->
   <div class="card">
     <h2>🌅 Repülési Ablak Előrejelzése</h2>
     <span class="location-badge">📍 Starthely: Paks / Pusztahencsei térség (46.605389, 18.715306)</span>
@@ -265,11 +263,9 @@
     <button type="button" class="btn-secondary" onclick="generateBroadcastMessage()">Kör SMS / Messenger Sablon</button>
   </div>
 
-  <!-- 2. ÚJ UTAS FELVÉTELE ÉS SMART PARSER KÁRTYA -->
   <div class="card">
     <h2>➕ Új Utas Felvétele</h2>
 
-    <!-- SMART PARSER MEZŐ -->
     <div class="parser-box">
       <label style="margin-top:0; color:#5b21b6;">⚡ Gyors beillesztés Messenger / SMS válaszból:</label>
       <textarea id="rawMessageInput" placeholder="Illeszd be ide a megrendelő üzenetét..."></textarea>
@@ -294,7 +290,7 @@
     <input type="date" id="newRegDate">
 
     <label for="newPreferredPeriod">Tervezett repülési időszak / Preferencia:</label>
-    <input type="text" id="newPreferredPeriod" placeholder="pl. Augusztus közepe, hétvége">
+    <input type="text" id="newPreferredPeriod" placeholder="pl. Hétvége / Következő hetek">
 
     <label for="newNote">Megjegyzés:</label>
     <input type="text" id="newNote" placeholder="pl. Különleges kérés...">
@@ -307,13 +303,11 @@
     <button type="button" onclick="addPassenger()">Utas Hozzáadása a Várólistára</button>
   </div>
 
-  <!-- 3. UTASOK RANGSORA KÁRTYA -->
   <div class="card">
     <h2>👥 Utasok Várakozási Rangsora</h2>
     <div id="passengerList"></div>
   </div>
 
-  <!-- 4. ÜZENET GENERÁTOR -->
   <div class="card">
     <h2>💬 Üzenet Sablon Generátor</h2>
     <div class="flex-row" style="margin-bottom:8px;">
@@ -568,8 +562,11 @@
     }
 
     function generateDataRequestTemplate() {
-        const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak (pl. augusztus közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:`;
-        document.getElementById("outputMsg").value = msg;
+        const currentMonthName = new Date().toLocaleString('hu-HU', { month: 'long' });
+        const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak (pl. ${currentMonthName} közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:`;
+        const outputField = document.getElementById("outputMsg");
+        outputField.value = msg;
+        outputField.scrollIntoView({ behavior: 'smooth' });
     }
 
     function generateBroadcastMessage() {
@@ -579,14 +576,19 @@
         const windStr = currentForecast ? `${currentForecast.windSpeed} km/h (pöffök: ${currentForecast.windGusts} km/h, ${currentForecast.compassDir})` : 'kedvező';
 
         const msg = `Szia! A Skyride Hungary repülési ablakot hirdet ${dateStr}-án kb. ${timeStr}-tól. Várható szél: ${windStr}, pályairány: ${runway}. Jelezz vissza, ha szeretnél repülni!`;
-        document.getElementById("outputMsg").value = msg;
+        const outputField = document.getElementById("outputMsg");
+        outputField.value = msg;
+        outputField.scrollIntoView({ behavior: 'smooth' });
     }
 
     function generateDirectMessage(name) {
         const dateStr = document.getElementById("targetDateSelect").value;
         const timeStr = currentForecast ? currentForecast.flightTime : 'az esti órákban';
         const msg = `Szia ${name}! A Skyride repülésed időpontja ${dateStr}-án várhatóan ${timeStr}-kor lesz. Kérlek jelezz vissza, ha megfelel neked!`;
-        document.getElementById("outputMsg").value = msg;
+        
+        const outputField = document.getElementById("outputMsg");
+        outputField.value = msg;
+        outputField.scrollIntoView({ behavior: 'smooth' });
     }
 
     function copyMessage() {
