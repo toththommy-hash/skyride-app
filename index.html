@@ -182,6 +182,15 @@
             background: #fef3c7;
             color: #92400e;
         }
+
+        .weather-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -190,6 +199,13 @@
     <div class="header">
         <div class="logo-text">SKYRIDE <span>HUNGARY</span></div>
         <div class="subtitle">Pilóta Dashboard & Utaskezelő Rendszer</div>
+    </div>
+
+    <!-- IDŐJÁRÁS LEKÉRDEZÉS -->
+    <div class="card">
+        <div class="card-title">🌤️ Repülőtéri Időjárás (Sárkeresztúr)</div>
+        <button class="btn btn-secondary" onclick="fetchWeather()" style="margin-bottom: 10px;">Időjárás Frissítése</button>
+        <div id="weatherDisplay" class="weather-box">Kattints a frissítésre a legfrissebb adatokért!</div>
     </div>
 
     <!-- UTAS REGISZTRÁCIÓ -->
@@ -267,8 +283,33 @@
 </div>
 
 <script>
-    // Koordináta alapú Google Térkép link
     const MAPS_LINK = "https://maps.google.com/?q=46.6283,18.6534";
+
+    // Open-Meteo API (Sárkeresztúr / Repülőtér koordinátái)
+    async function fetchWeather() {
+        const display = document.getElementById("weatherDisplay");
+        display.innerHTML = "Adatok lekérése...";
+        try {
+            const response = await fetch("https://api.open-meteo.com/v1/forecast?latitude=46.6283&longitude=18.6534&current_weather=true");
+            const data = await response.json();
+            const temp = data.current_weather.temperature;
+            const wind = data.current_weather.windspeed;
+
+            display.innerHTML = `<strong>Hőmérséklet:</strong> ${temp} °C<br><strong>Szélsebesség:</strong> ${wind} km/h`;
+            
+            // Automatikus kiválasztás az SMS-hez a hőmérséklet alapján
+            const tempSelect = document.getElementById("tempCategory");
+            if (temp < 20) {
+                tempSelect.value = "mild";
+            } else if (temp <= 30) {
+                tempSelect.value = "warm";
+            } else {
+                tempSelect.value = "hot";
+            }
+        } catch (err) {
+            display.innerHTML = "Nem sikerült az időjárás lekérése.";
+        }
+    }
 
     let db;
     const request = indexedDB.open("SkyrideDB", 1);
@@ -283,6 +324,7 @@
     request.onsuccess = function(e) {
         db = e.target.result;
         loadPassengers();
+        fetchWeather(); // Oldal betöltésekor automatikusan lekéri az időjárást
     };
 
     document.getElementById("passengerForm").addEventListener("submit", function(e) {
@@ -353,7 +395,6 @@
         }
     }
 
-    // 1. ADATKÉRŐ SABLON GENERÁLÁSA (Aktuális hónappal)
     function generateDataRequestTemplate() {
         const currentMonthName = new Date().toLocaleString('hu-HU', { month: 'long' });
         const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak (pl. ${currentMonthName} közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:`;
@@ -363,7 +404,6 @@
         outputField.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // 2. REPÜLÉSRE HÍVÓ SABLON GENERÁLÁSA (Öltözködéssel & Térkép Linkkel)
     function generateFlightInviteTemplate() {
         const tempCategory = document.getElementById("tempCategory").value;
         let clothingAdvice = "";
