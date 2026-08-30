@@ -201,14 +201,14 @@
         <div class="subtitle">Pilóta Dashboard & Utaskezelő Rendszer</div>
     </div>
 
-    <!-- IDŐJÁRÁS LEKÉRDEZÉS -->
+    <!-- 1. IDŐJÁRÁS LEKÉRDEZÉS -->
     <div class="card">
-        <div class="card-title">🌤️ Repülőtéri Időjárás (Sárkeresztúr)</div>
+        <div class="card-title">🌤️ Repülőtéri Időjárás</div>
         <button class="btn btn-secondary" onclick="fetchWeather()" style="margin-bottom: 10px;">Időjárás Frissítése</button>
         <div id="weatherDisplay" class="weather-box">Kattints a frissítésre a legfrissebb adatokért!</div>
     </div>
 
-    <!-- UTAS REGISZTRÁCIÓ -->
+    <!-- 2. UTAS REGISZTRÁCIÓ -->
     <div class="card">
         <div class="card-title">➕ Új utas rögzítése</div>
         <form id="passengerForm">
@@ -250,7 +250,7 @@
         </form>
     </div>
 
-    <!-- SABLON GENERÁTOR -->
+    <!-- 3. SABLON GENERÁTOR -->
     <div class="card">
         <div class="card-title">✉️ SMS Sablonok</div>
         
@@ -275,7 +275,7 @@
         <button class="btn" onclick="copyTemplate()">Másolás a vágólapra</button>
     </div>
 
-    <!-- UTASLISTA -->
+    <!-- 4. UTASLISTA -->
     <div class="card">
         <div class="card-title">📋 Rögzített utasok</div>
         <div id="passengerList">Még nincs rögzített utas.</div>
@@ -285,7 +285,7 @@
 <script>
     const MAPS_LINK = "https://maps.google.com/?q=46.6283,18.6534";
 
-    // Open-Meteo API (Sárkeresztúr / Repülőtér koordinátái)
+    // Open-Meteo API lekérdezése (GPS koordináták alapján)
     async function fetchWeather() {
         const display = document.getElementById("weatherDisplay");
         display.innerHTML = "Adatok lekérése...";
@@ -297,7 +297,7 @@
 
             display.innerHTML = `<strong>Hőmérséklet:</strong> ${temp} °C<br><strong>Szélsebesség:</strong> ${wind} km/h`;
             
-            // Automatikus kiválasztás az SMS-hez a hőmérséklet alapján
+            // Hőmérséklet alapján automatikus SMS-öltözet beállítás
             const tempSelect = document.getElementById("tempCategory");
             if (temp < 20) {
                 tempSelect.value = "mild";
@@ -324,7 +324,7 @@
     request.onsuccess = function(e) {
         db = e.target.result;
         loadPassengers();
-        fetchWeather(); // Oldal betöltésekor automatikusan lekéri az időjárást
+        fetchWeather();
     };
 
     document.getElementById("passengerForm").addEventListener("submit", function(e) {
@@ -395,6 +395,7 @@
         }
     }
 
+    // Adatkérő SMS sablon dinamikus hónappal
     function generateDataRequestTemplate() {
         const currentMonthName = new Date().toLocaleString('hu-HU', { month: 'long' });
         const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak (pl. ${currentMonthName} közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:`;
@@ -404,6 +405,7 @@
         outputField.scrollIntoView({ behavior: 'smooth' });
     }
 
+    // Repülésre hívó SMS sablon navigációval és öltözködési tanáccsal
     function generateFlightInviteTemplate() {
         const tempCategory = document.getElementById("tempCategory").value;
         let clothingAdvice = "";
