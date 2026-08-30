@@ -138,6 +138,12 @@
             gap: 8px;
         }
 
+        .btn-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+        }
+
         .weather-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -249,7 +255,7 @@
         <div class="subtitle">Pilóta Dashboard • Felszállóhely: Nagydorog / Kajdacs zóna</div>
     </div>
 
-    <!-- 1. IDŐJÁRÁS MODUL (PONTOS GPS KOORDINÁTA + NAPNYUGTA SZÁMÍTÁS) -->
+    <!-- 1. IDŐJÁRÁS MODUL -->
     <div class="card">
         <div class="card-title">
             <span>💨 Repülőtéri Szél & Időjárás</span>
@@ -265,7 +271,6 @@
     <div class="card">
         <div class="card-title">➕ Új Utas Rögzítése</div>
         
-        <!-- INTELLIGENS BEILLESZTŐ BOX -->
         <div class="parser-box">
             <label style="color:var(--brand-orange); margin-bottom:6px; display:block;">📲 SMS Válasz Beillesztése & Automatizálás</label>
             <textarea id="rawSmsInput" style="min-height:70px; margin-bottom:8px;" placeholder="Másold ide az utas által visszaküldött SMS szövegét..."></textarea>
@@ -314,7 +319,7 @@
         </form>
     </div>
 
-    <!-- 3. DINAMIKUS SMS SABLON GENERÁTOR -->
+    <!-- 3. DINAMIKUS SMS SABLON GENERÁTOR (3 SABLONNAL) -->
     <div class="card">
         <div class="card-title">✉️ SMS / Üzenet Sablonok</div>
         
@@ -327,9 +332,10 @@
             </select>
         </div>
 
-        <div class="btn-grid">
-            <button class="btn btn-secondary" onclick="generateDataRequestTemplate()">1. Adatkérő Sablon</button>
-            <button class="btn btn-secondary" onclick="generateFlightInviteTemplate()">2. Repülésre Hívó</button>
+        <div class="btn-grid-3">
+            <button class="btn btn-secondary" style="font-size:12px; padding:10px 4px;" onclick="generateDataRequestTemplate()">1. Adatkérő</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:10px 4px;" onclick="generateFlightInviteTemplate()">2. Hívó SMS</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:10px 4px; color:#fca5a5;" onclick="generateDemoteTemplate()">3. Hátrasoroló</button>
         </div>
 
         <div class="form-group" style="margin-top: 12px;">
@@ -353,7 +359,6 @@
 </div>
 
 <script>
-    // Felszállási helyszín koordinátái & Google Maps Link & Pilóta elérhetőség
     const LAUNCH_SITE = {
         lat: 46.605389,
         lon: 18.715306,
@@ -381,7 +386,6 @@
             const currentHour = new Date().getHours();
             const windGust = data.hourly ? data.hourly.windgusts_10m[currentHour] : windSpeed;
 
-            // Napnyugta és Érkezési idő kiszámítása (-1,5 óra / 90 perc)
             if (data.daily && data.daily.sunset && data.daily.sunset[0]) {
                 const sunsetDate = new Date(data.daily.sunset[0]);
                 const arrivalDate = new Date(sunsetDate.getTime() - (90 * 60 * 1000));
@@ -393,7 +397,6 @@
             updateTempDropdown(temp);
             const dirText = degreeToCompass(windDirDegree);
 
-            // Fresh Breeze Xcitor értékelés
             let statusClass = "status-ok";
             let statusMsg = "✅ Kiváló repülési idő! Biztonságosan startolható.";
 
@@ -452,7 +455,7 @@
         else select.value = "hot";
     }
 
-    // --- SMART PARSER (SMS VÁLASZ AUTOMATIKUS ADATKINYERÉSE) ---
+    // --- SMART PARSER ---
     async function pasteFromClipboard() {
         try {
             const text = await navigator.clipboard.readText();
@@ -532,7 +535,7 @@
         };
     });
 
-    // --- UTASLISTA BETÖLTÉSE & 3 DOBÁS ELVE ---
+    // --- UTASLISTA BETÖLTÉSE ---
     function loadPassengers() {
         const tx = db.transaction(["passengers"], "readonly");
         const req = tx.objectStore("passengers").getAll();
@@ -568,7 +571,7 @@
                     <div style="font-size:13px; color:var(--text-muted); line-height:1.5;">
                         📞 <strong>Tel:</strong> <a href="tel:${p.phone}" style="color:var(--brand-orange);">${p.phone}</a><br>
                         📝 <strong>Megjegyzés:</strong> ${p.period || 'Nincs megadva'}<br>
-                        🎲 <strong>Próbálkozások (3 dobás):</strong> ${p.attempts} / 3<br>
+                        🎲 <strong>Próbálkozások:</strong> ${p.attempts} / 3<br>
                         ${p.gift === 'igen' ? '<span class="badge badge-gift">🎁 Ajándék</span> ' : ''}
                         ${p.voucher === 'igen' ? '<span class="badge badge-voucher">🎟️ Voucher kért</span>' : ''}
                     </div>
@@ -610,11 +613,11 @@
         }
     }
 
-    // --- SABLON GENERÁTOR (PONTOS ÉRKEZÉSI IDŐVEL & ÖLTÖZETEL & TELEFONSZÁMMAL) ---
+    // --- SABLON GENERÁTOROK ---
     function generateDataRequestTemplate() {
         const currentMonthName = new Date().toLocaleString('hu-HU', { month: 'long' });
         
-        const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak (pl. ${currentMonthName} közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:`;
+        const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak (pl. ${currentMonthName} közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:\n\nℹ️ Fontos infó: Az időjárási bizonytalanságok miatt a naptáramat rugalmasan kezeljük. Amennyiben 3 egymást követő alkalommal nem tudunk időpontot egyeztetni vagy visszamondásra kerül a repülés, a regisztrációd automatikusan a várólista végére sorolódik.`;
         
         document.getElementById("outputMsg").value = msg;
     }
@@ -633,6 +636,12 @@
         }
 
         const msg = `Szia! Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n⏰ Érkezési idő: ${meetingTime} (napnyugta előtt 1,5 órával találkozunk).\n\n📍 Felszállási Helyszín / Navigáció:\n${LAUNCH_SITE.mapsUrl}\n\n👕 Öltözet ajánlás:\n${clothingAdvice}\n\nKérlek jelezz vissza, hogy megfelelő-e az időpont!\nTovábbi kérdés esetén: ${PILOT_PHONE} (Tóth Tamás - Skyride Hungary)`;
+
+        document.getElementById("outputMsg").value = msg;
+    }
+
+    function generateDemoteTemplate() {
+        const msg = `Szia! Mivel a mai napra felajánlott időpont sem volt megfelelő számodra, a szabályzatunknak megfelelően a regisztrációdat automatikusan a várólistánk végére soroltuk.\n\nAmint az előtted lévő várakozókkal egyeztettünk, vagy újra nyílik szabad kapacitásunk a repülésekre, jelentkezni fogunk nálad a következő lehetőséggel!\n\nKöszönjük a megértésedet! 😊\nTóth Tamás - Skyride Hungary (${PILOT_PHONE})`;
 
         document.getElementById("outputMsg").value = msg;
     }
