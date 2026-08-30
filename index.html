@@ -184,12 +184,25 @@
         .status-warn { background-color: #78350f; color: #fde68a; border: 1px solid #92400e; }
         .status-danger { background-color: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; }
 
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: #262626;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid #333;
+        }
+
         .passenger-item {
             border: 1px solid var(--card-border);
             border-radius: 10px;
             padding: 14px;
             margin-bottom: 10px;
             background-color: #242424;
+            transition: all 0.2s;
         }
 
         .passenger-item.demoted {
@@ -255,15 +268,20 @@
         <div class="subtitle">Pilóta Dashboard • Felszállóhely: Nagydorog / Kajdacs zóna</div>
     </div>
 
-    <!-- 1. IDŐJÁRÁS MODUL -->
+    <!-- 1. IDŐJÁRÁS & DÁTUM VÁLASZTÓ MODUL -->
     <div class="card">
         <div class="card-title">
-            <span>💨 Repülőtéri Szél & Időjárás</span>
+            <span>💨 Szél & Időjárás Előrejelzés</span>
             <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">GPS: 46.6054, 18.7153</span>
         </div>
 
+        <div class="form-group">
+            <label>📅 Repülés Tervezett Napja:</label>
+            <input type="date" id="weatherDate" onchange="fetchWeather()">
+        </div>
+
         <div id="weatherContent">
-            <button class="btn btn-secondary btn-full" onclick="fetchWeather()">Széladatok Frissítése</button>
+            <button class="btn btn-secondary btn-full" onclick="fetchWeather()">Szél- és Napnyugta Adatok Frissítése</button>
         </div>
     </div>
 
@@ -295,9 +313,15 @@
                     <input type="tel" id="pPhone" required placeholder="+36301234567">
                 </div>
             </div>
-            <div class="form-group">
-                <label>Tervezett időszak / Megjegyzés</label>
-                <input type="text" id="pPeriod" placeholder="pl. Augusztus közepe / Hétvége">
+            <div class="btn-grid">
+                <div class="form-group">
+                    <label>Repülés Tervezett Dátuma</label>
+                    <input type="date" id="pFlightDate">
+                </div>
+                <div class="form-group">
+                    <label>Tervezett időszak / Megjegyzés</label>
+                    <input type="text" id="pPeriod" placeholder="pl. Hétvége / Délután">
+                </div>
             </div>
             <div class="btn-grid">
                 <div class="form-group">
@@ -319,7 +343,7 @@
         </form>
     </div>
 
-    <!-- 3. DINAMIKUS SMS SABLON GENERÁTOR (3 SABLONNAL) -->
+    <!-- 3. DINAMIKUS SMS SABLON GENERÁTOR -->
     <div class="card">
         <div class="card-title">✉️ SMS / Üzenet Sablonok</div>
         
@@ -348,12 +372,25 @@
         </div>
     </div>
 
-    <!-- 4. UTASLISTA (3 DOBÁS ELVE & HÁTRASOROLÁS) -->
+    <!-- 4. UTASLISTA (STATISZTIKA, KERESŐ & 3 DOBÁS ELVE) -->
     <div class="card">
         <div class="card-title">
             <span>📋 Utaslista & Hátrasorolás</span>
             <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">(3 dobás elve)</span>
         </div>
+
+        <!-- STATISZTIKAI SÁV -->
+        <div class="stats-bar">
+            <span>Összes Utas: <span id="statTotal" style="color:var(--brand-orange);">0</span></span>
+            <span>Aktív: <span id="statActive" style="color:var(--success);">0</span></span>
+            <span>Hátrasorolt (3+): <span id="statDemoted" style="color:var(--danger);">0</span></span>
+        </div>
+
+        <!-- KERESŐ MEZŐ -->
+        <div class="form-group">
+            <input type="text" id="searchInput" placeholder="🔍 Keresés név vagy telefonszám alapján..." oninput="loadPassengers()">
+        </div>
+
         <div id="passengerList">Betöltés...</div>
     </div>
 </div>
@@ -369,22 +406,29 @@
     let calculatedSunset = "";
     let calculatedArrivalTime = "";
 
-    // --- IDŐJÁRÁS & NAPNYUGTA LEKÉRDEZÉS ---
+    // Alapértelmezett dátum beállítása mai napra
+    document.addEventListener("DOMContentLoaded", function() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById("weatherDate").value = todayStr;
+        document.getElementById("pFlightDate").value = todayStr;
+    });
+
+    // --- IDŐJÁRÁS & NAPNYUGTA LEKÉRDEZÉS DÁTUM ALAPJÁN ---
     async function fetchWeather() {
         const container = document.getElementById("weatherContent");
+        const selectedDate = document.getElementById("weatherDate").value || new Date().toISOString().split('T')[0];
+        
         container.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Szél- és napnyugta adatok lekérése...</p>";
 
         try {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAUNCH_SITE.lat}&longitude=${LAUNCH_SITE.lon}&current_weather=true&hourly=windgusts_10m&daily=sunset&timezone=Europe%2FBudapest`;
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAUNCH_SITE.lat}&longitude=${LAUNCH_SITE.lon}&daily=sunset,temperature_2m_max,windspeed_10m_max,windgusts_10m_max&hourly=temperature_2m,windspeed_10m,windgusts_10m,winddirection_10m&timezone=Europe%2FBudapest&start_date=${selectedDate}&end_date=${selectedDate}`;
             const res = await fetch(url);
             const data = await res.json();
 
-            const temp = data.current_weather.temperature;
-            const windSpeed = data.current_weather.windspeed;
-            const windDirDegree = data.current_weather.winddirection;
-            
-            const currentHour = new Date().getHours();
-            const windGust = data.hourly ? data.hourly.windgusts_10m[currentHour] : windSpeed;
+            let temp = data.daily ? data.daily.temperature_2m_max[0] : 22;
+            let windSpeed = data.daily ? data.daily.windspeed_10m_max[0] : 10;
+            let windGust = data.daily ? data.daily.windgusts_10m_max[0] : windSpeed;
+            let windDirDegree = (data.hourly && data.hourly.winddirection_10m) ? data.hourly.winddirection_10m[18] || 180 : 180;
 
             if (data.daily && data.daily.sunset && data.daily.sunset[0]) {
                 const sunsetDate = new Date(data.daily.sunset[0]);
@@ -408,23 +452,28 @@
                 statusMsg = "⚠️ Mérsékelt / Élénk szél. Rutinos startot igényel.";
             }
 
+            const formattedDisplayDate = new Date(selectedDate).toLocaleDateString('hu-HU', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+
             container.innerHTML = `
+                <div style="font-size:12px; color:var(--brand-orange); text-align:center; font-weight:bold; margin-bottom:6px;">
+                    📅 ${formattedDisplayDate}
+                </div>
                 <div class="weather-grid">
                     <div class="weather-stat">
                         <div class="val">${temp} °C</div>
-                        <div class="lbl">Hőmérséklet</div>
+                        <div class="lbl">Max Hőmérséklet</div>
                     </div>
                     <div class="weather-stat">
                         <div class="val">${windSpeed} km/h</div>
-                        <div class="lbl">Alapszél</div>
+                        <div class="lbl">Várható Szél</div>
                     </div>
                     <div class="weather-stat">
                         <div class="val" style="color:${windGust > 20 ? 'var(--brand-orange)' : 'inherit'};">${windGust} km/h</div>
-                        <div class="lbl">Széllökés</div>
+                        <div class="lbl">Max Széllökés</div>
                     </div>
                     <div class="weather-stat">
                         <div class="val">${dirText}</div>
-                        <div class="lbl">Szélirány (${windDirDegree}°)</div>
+                        <div class="lbl">Szélirány (~${windDirDegree}°)</div>
                     </div>
                     <div class="weather-stat">
                         <div class="val" style="color:var(--brand-orange);">${calculatedSunset || '--:--'}</div>
@@ -439,7 +488,7 @@
                 <button class="btn btn-secondary btn-full" style="margin-top:10px;" onclick="fetchWeather()">Frissítés</button>
             `;
         } catch (err) {
-            container.innerHTML = "<p style='color:var(--danger); text-align:center;'>Hiba történt az időjárás lekérésekor.</p>";
+            container.innerHTML = "<p style='color:var(--danger); text-align:center;'>Hiba történt az időjárási adatok lekérésekor.</p>";
         }
     }
 
@@ -498,7 +547,7 @@
 
     // --- INDEXEDDB UTAS ADATBÁZIS ---
     let db;
-    const dbReq = indexedDB.open("SkyrideDB_V3", 1);
+    const dbReq = indexedDB.open("SkyrideDB_V4", 1);
 
     dbReq.onupgradeneeded = function(e) {
         db = e.target.result;
@@ -519,6 +568,7 @@
             name: document.getElementById("pName").value,
             weight: document.getElementById("pWeight").value,
             phone: document.getElementById("pPhone").value,
+            flightDate: document.getElementById("pFlightDate").value,
             period: document.getElementById("pPeriod").value,
             gift: document.getElementById("pGift").value,
             voucher: document.getElementById("pVoucher").value,
@@ -531,11 +581,13 @@
         tx.oncomplete = function() {
             document.getElementById("passengerForm").reset();
             document.getElementById("rawSmsInput").value = "";
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById("pFlightDate").value = todayStr;
             loadPassengers();
         };
     });
 
-    // --- UTASLISTA BETÖLTÉSE ---
+    // --- UTASLISTA BETÖLTÉSE, SZŰRÉSE ÉS STATISZTIKA ---
     function loadPassengers() {
         const tx = db.transaction(["passengers"], "readonly");
         const req = tx.objectStore("passengers").getAll();
@@ -544,11 +596,30 @@
             const listContainer = document.getElementById("passengerList");
             let passengers = req.result;
 
+            // Statisztikák frissítése
+            const totalCount = passengers.length;
+            const demotedCount = passengers.filter(p => p.attempts >= 3).length;
+            const activeCount = totalCount - demotedCount;
+
+            document.getElementById("statTotal").textContent = totalCount;
+            document.getElementById("statActive").textContent = activeCount;
+            document.getElementById("statDemoted").textContent = demotedCount;
+
+            // Keresési szűrő alkalmazása
+            const filterQuery = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+            if (filterQuery) {
+                passengers = passengers.filter(p => 
+                    p.name.toLowerCase().includes(filterQuery) || 
+                    p.phone.includes(filterQuery)
+                );
+            }
+
             if (passengers.length === 0) {
-                listContainer.innerHTML = "<p style='color:var(--text-muted); font-size:14px; text-align:center;'>Még nincs rögzített utas az adatbázisban.</p>";
+                listContainer.innerHTML = "<p style='color:var(--text-muted); font-size:14px; text-align:center;'>Nincs találat az utaslistában.</p>";
                 return;
             }
 
+            // Rendezés: Aktívak felül, 3+ dobásosok automatikusan alul
             passengers.sort((a, b) => {
                 const aDemoted = (a.attempts >= 3) ? 1 : 0;
                 const bDemoted = (b.attempts >= 3) ? 1 : 0;
@@ -561,6 +632,8 @@
                 const item = document.createElement("div");
                 item.className = `passenger-item ${isDemoted ? 'demoted' : ''}`;
                 
+                const formattedFlightDate = p.flightDate ? new Date(p.flightDate).toLocaleDateString('hu-HU', { year:'numeric', month:'2-digit', day:'2-digit' }) : 'Nincs megadva';
+
                 item.innerHTML = `
                     <div class="passenger-header">
                         <span class="passenger-name">${p.name} (${p.weight} kg)</span>
@@ -570,7 +643,8 @@
                     </div>
                     <div style="font-size:13px; color:var(--text-muted); line-height:1.5;">
                         📞 <strong>Tel:</strong> <a href="tel:${p.phone}" style="color:var(--brand-orange);">${p.phone}</a><br>
-                        📝 <strong>Megjegyzés:</strong> ${p.period || 'Nincs megadva'}<br>
+                        📅 <strong>Tervezett dátum:</strong> <span style="color:#ffffff; font-weight:bold;">${formattedFlightDate}</span><br>
+                        📝 <strong>Megjegyzés:</strong> ${p.period || 'Nincs'}<br>
                         🎲 <strong>Próbálkozások:</strong> ${p.attempts} / 3<br>
                         ${p.gift === 'igen' ? '<span class="badge badge-gift">🎁 Ajándék</span> ' : ''}
                         ${p.voucher === 'igen' ? '<span class="badge badge-voucher">🎟️ Voucher kért</span>' : ''}
@@ -617,13 +691,20 @@
     function generateDataRequestTemplate() {
         const currentMonthName = new Date().toLocaleString('hu-HU', { month: 'long' });
         
-        const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak (pl. ${currentMonthName} közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:\n\nℹ️ Fontos infó: Az időjárási bizonytalanságok miatt a naptáramat rugalmasan kezeljük. Amennyiben 3 egymást követő alkalommal nem tudunk időpontot egyeztetni vagy visszamondásra kerül a repülés, a regisztrációd automatikusan a várólista végére sorolódik.`;
+        const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak / dátum (pl. ${currentMonthName} közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:\n\nℹ️ Fontos infó: Az időjárási bizonytalanságok miatt a naptáramat rugalmasan kezeljük. Amennyiben 3 egymást követő alkalommal nem tudunk időpontot egyeztetni vagy visszamondásra kerül a repülés, a regisztrációd automatikusan a várólista végére sorolódik.`;
         
         document.getElementById("outputMsg").value = msg;
     }
 
     function generateFlightInviteTemplate() {
         const tempCategory = document.getElementById("tempCategory").value;
+        const selectedDate = document.getElementById("weatherDate").value;
+        
+        let formattedDateStr = "a megbeszélt napon";
+        if (selectedDate) {
+            formattedDateStr = new Date(selectedDate).toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'short' });
+        }
+
         const meetingTime = calculatedArrivalTime ? `${calculatedArrivalTime} órára` : "a megbeszélt időpontra";
         
         let clothingAdvice = "";
@@ -635,7 +716,7 @@
             clothingAdvice = "Könnyű nyári öltözet és zárt cipő (hozz magaddal napszemüveget is!).";
         }
 
-        const msg = `Szia! Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n⏰ Érkezési idő: ${meetingTime} (napnyugta előtt 1,5 órával találkozunk).\n\n📍 Felszállási Helyszín / Navigáció:\n${LAUNCH_SITE.mapsUrl}\n\n👕 Öltözet ajánlás:\n${clothingAdvice}\n\nKérlek jelezz vissza, hogy megfelelő-e az időpont!\nTovábbi kérdés esetén: ${PILOT_PHONE} (Tóth Tamás - Skyride Hungary)`;
+        const msg = `Szia! Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n📅 Dátum: ${formattedDateStr}\n⏰ Érkezési idő: ${meetingTime} (napnyugta előtt 1,5 órával találkozunk).\n\n📍 Felszállási Helyszín / Navigáció:\n${LAUNCH_SITE.mapsUrl}\n\n👕 Öltözet ajánlás:\n${clothingAdvice}\n\nKérlek jelezz vissza, hogy megfelelő-e az időpont!\nTovábbi kérdés esetén: ${PILOT_PHONE} (Tóth Tamás - Skyride Hungary)`;
 
         document.getElementById("outputMsg").value = msg;
     }
