@@ -154,7 +154,7 @@
         }
 
         .weather-stat .val {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
             color: #ffffff;
         }
@@ -249,7 +249,7 @@
         <div class="subtitle">Pilóta Dashboard • Felszállóhely: Nagydorog / Kajdacs zóna</div>
     </div>
 
-    <!-- 1. IDŐJÁRÁS MODUL (PONTOS GPS KOORDINÁTA) -->
+    <!-- 1. IDŐJÁRÁS MODUL (PONTOS GPS KOORDINÁTA + NAPNYUGTA SZÁMÍTÁS) -->
     <div class="card">
         <div class="card-title">
             <span>💨 Repülőtéri Szél & Időjárás</span>
@@ -265,7 +265,7 @@
     <div class="card">
         <div class="card-title">➕ Új Utas Rögzítése</div>
         
-        <!-- INTELLIGENS BEILLEVESZTŐ BOX -->
+        <!-- INTELLIGENS BEILLESZTŐ BOX -->
         <div class="parser-box">
             <label style="color:var(--brand-orange); margin-bottom:6px; display:block;">📲 SMS Válasz Beillesztése & Automatizálás</label>
             <textarea id="rawSmsInput" style="min-height:70px; margin-bottom:8px;" placeholder="Másold ide az utas által visszaküldött SMS szövegét..."></textarea>
@@ -319,11 +319,11 @@
         <div class="card-title">✉️ SMS / Üzenet Sablonok</div>
         
         <div class="form-group">
-            <label>Aktuális / Várható Hőmérséklet (Öltözködési tanácshoz)</label>
+            <label>Várható Hőmérséklet (Öltözethez)</label>
             <select id="tempCategory">
-                <option value="mild">15–20 °C (Hűvösebb / Réteges & Szélálló)</option>
-                <option value="warm" selected>20–30 °C (Kellemes nyári öltözet)</option>
-                <option value="hot">30 °C felett (Kánikula / Napszemüveg + Víz)</option>
+                <option value="mild">15–20 °C (Hűvösebb / Réteges)</option>
+                <option value="warm" selected>20–30 °C (Nyári öltözet)</option>
+                <option value="hot">30 °C felett (Kánikula)</option>
             </select>
         </div>
 
@@ -353,22 +353,24 @@
 </div>
 
 <script>
-    // Felszállási helyszín koordinátái & Google Maps Link
+    // Felszállási helyszín koordinátái & Google Maps Link & Pilóta elérhetőség
     const LAUNCH_SITE = {
         lat: 46.605389,
         lon: 18.715306,
         mapsUrl: "https://maps.google.com/?q=46.605389,18.715306"
     };
+    const PILOT_PHONE = "+36202049194";
 
-    let currentTemp = 25;
+    let calculatedSunset = "";
+    let calculatedArrivalTime = "";
 
-    // --- IDŐJÁRÁS LEKÉRDEZÉS (PARATRIKE HATÁRÉRTÉKEKKEL) ---
+    // --- IDŐJÁRÁS & NAPNYUGTA LEKÉRDEZÉS ---
     async function fetchWeather() {
         const container = document.getElementById("weatherContent");
-        container.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Széladatok lekérése...</p>";
+        container.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Szél- és napnyugta adatok lekérése...</p>";
 
         try {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAUNCH_SITE.lat}&longitude=${LAUNCH_SITE.lon}&current_weather=true&hourly=windgusts_10m`;
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAUNCH_SITE.lat}&longitude=${LAUNCH_SITE.lon}&current_weather=true&hourly=windgusts_10m&daily=sunset&timezone=Europe%2FBudapest`;
             const res = await fetch(url);
             const data = await res.json();
 
@@ -379,9 +381,16 @@
             const currentHour = new Date().getHours();
             const windGust = data.hourly ? data.hourly.windgusts_10m[currentHour] : windSpeed;
 
-            currentTemp = temp;
-            updateTempDropdown(temp);
+            // Napnyugta és Érkezési idő kiszámítása (-1,5 óra / 90 perc)
+            if (data.daily && data.daily.sunset && data.daily.sunset[0]) {
+                const sunsetDate = new Date(data.daily.sunset[0]);
+                const arrivalDate = new Date(sunsetDate.getTime() - (90 * 60 * 1000));
+                
+                calculatedSunset = sunsetDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+                calculatedArrivalTime = arrivalDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+            }
 
+            updateTempDropdown(temp);
             const dirText = degreeToCompass(windDirDegree);
 
             // Fresh Breeze Xcitor értékelés
@@ -413,6 +422,14 @@
                     <div class="weather-stat">
                         <div class="val">${dirText}</div>
                         <div class="lbl">Szélirány (${windDirDegree}°)</div>
+                    </div>
+                    <div class="weather-stat">
+                        <div class="val" style="color:var(--brand-orange);">${calculatedSunset || '--:--'}</div>
+                        <div class="lbl">🌅 Napnyugta</div>
+                    </div>
+                    <div class="weather-stat">
+                        <div class="val" style="color:#10b981;">${calculatedArrivalTime || '--:--'}</div>
+                        <div class="lbl">⏰ Javasolt Érkezés</div>
                     </div>
                 </div>
                 <div class="status-banner ${statusClass}">${statusMsg}</div>
@@ -450,35 +467,29 @@
         const raw = document.getElementById("rawSmsInput").value;
         if (!raw.trim()) return;
 
-        // Telefonszám keresése
         const phoneMatch = raw.match(/(?:\+36|06)[\s\-]?\d{1,2}[\s\-]?\d{3}[\s\-]?\d{3,4}/);
         if (phoneMatch) {
             document.getElementById("pPhone").value = phoneMatch[0].replace(/[\s\-]/g, '');
         }
 
-        // Súly keresése (pl. 82kg, 82 kg, 82  kg)
         const weightMatch = raw.match(/(\d{2,3})\s*(?:kg|kilo|kilogramm)/i);
         if (weightMatch) {
             document.getElementById("pWeight").value = weightMatch[1];
         }
 
-        // Név keresése (ha Név: után van, vagy a szöveg elején)
         const nameMatch = raw.match(/(?:Név|Nev):\s*([A-ZÁÉÍÓÖŐÚÜŰa-záéíóöőúüű\s]+)/i);
         if (nameMatch) {
             document.getElementById("pName").value = nameMatch[1].trim();
         } else {
-            // Ha nincsen "Név:" címke, megpróbáljuk az első két szót
             const firstWords = raw.trim().split(/\n|,|\./)[0];
             if (firstWords && firstWords.length < 30 && !firstWords.includes("Szia")) {
                 document.getElementById("pName").value = firstWords.trim();
             }
         }
 
-        // Ajándék / Voucher kulcsszavak
         if (/ajándék|ajandek/i.test(raw)) document.getElementById("pGift").value = "igen";
         if (/voucher|utalvány|utalvany/i.test(raw)) document.getElementById("pVoucher").value = "igen";
 
-        // Megjegyzés / Időszak
         document.getElementById("pPeriod").value = raw.replace(/\n/g, ' ').substring(0, 60);
     }
 
@@ -521,7 +532,7 @@
         };
     });
 
-    // --- UTASLISTA BETÖLTÉSE & 3 DOBÁS ELVE SZERINTI HÁTRASOROLÁS ---
+    // --- UTASLISTA BETÖLTÉSE & 3 DOBÁS ELVE ---
     function loadPassengers() {
         const tx = db.transaction(["passengers"], "readonly");
         const req = tx.objectStore("passengers").getAll();
@@ -535,7 +546,6 @@
                 return;
             }
 
-            // Rendezés: Aktívak elöl, Hátrasoroltak (3+ dobás) a legalján!
             passengers.sort((a, b) => {
                 const aDemoted = (a.attempts >= 3) ? 1 : 0;
                 const bDemoted = (b.attempts >= 3) ? 1 : 0;
@@ -600,9 +610,8 @@
         }
     }
 
-    // --- SABLON GENERÁTOR (AUTOMATIKUS HÓNAP & ÖLTÖZET & TÉRKÉP LINK) ---
+    // --- SABLON GENERÁTOR (PONTOS ÉRKEZÉSI IDŐVEL & ÖLTÖZETEL & TELEFONSZÁMMAL) ---
     function generateDataRequestTemplate() {
-        // Dinamikus hónap kiolvasása a rendszerből
         const currentMonthName = new Date().toLocaleString('hu-HU', { month: 'long' });
         
         const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak (pl. ${currentMonthName} közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:`;
@@ -612,6 +621,7 @@
 
     function generateFlightInviteTemplate() {
         const tempCategory = document.getElementById("tempCategory").value;
+        const meetingTime = calculatedArrivalTime ? `${calculatedArrivalTime} órára` : "a megbeszélt időpontra";
         
         let clothingAdvice = "";
         if (tempCategory === "mild") {
@@ -622,7 +632,7 @@
             clothingAdvice = "Könnyű nyári öltözet és zárt cipő (hozz magaddal napszemüveget is!).";
         }
 
-        const msg = `Szia! Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n📍 Felszállási Helyszín / Navigáció:\n${LAUNCH_SITE.mapsUrl}\n\n👕 Öltözet ajánlás:\n${clothingAdvice}\n\nKérlek jelezz vissza, hogy megfelelő-e az időpont!`;
+        const msg = `Szia! Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n⏰ Érkezési idő: ${meetingTime} (napnyugta előtt 1,5 órával találkozunk).\n\n📍 Felszállási Helyszín / Navigáció:\n${LAUNCH_SITE.mapsUrl}\n\n👕 Öltözet ajánlás:\n${clothingAdvice}\n\nKérlek jelezz vissza, hogy megfelelő-e az időpont!\nTovábbi kérdés esetén: ${PILOT_PHONE} (Tóth Tamás - Skyride Hungary)`;
 
         document.getElementById("outputMsg").value = msg;
     }
