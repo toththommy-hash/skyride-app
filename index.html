@@ -1,600 +1,395 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Skyride Hungary – Pilot Dashboard Pro</title>
-  <style>
-    :root {
-      --primary-navy: #0f172a;
-      --sky-blue: #0284c7;
-      --brand-yellow: #f59e0b;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #0f172a;
-      --border: #e2e8f0;
-      --danger: #ef4444;
-      --success: #10b981;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyride Hungary – Pilot Dashboard Pro</title>
+    <style>
+        :root {
+            --primary-navy: #0f172a;
+            --sky-blue: #0284c7;
+            --brand-yellow: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 16px;
-      display: flex;
-      justify-content: center;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+        }
 
-    .container {
-      width: 100%;
-      max-width: 520px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-    .card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-      border: 1px solid var(--border);
-    }
+        .header {
+            text-align: center;
+            padding: 12px 0;
+            border-bottom: 2px solid var(--sky-blue);
+        }
 
-    .header {
-      text-align: center;
-      margin-bottom: 10px;
-    }
+        .logo-text {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--primary-navy);
+        }
 
-    .logo-text {
-      font-size: 1.6rem;
-      font-weight: 900;
-      color: var(--primary-navy);
-      letter-spacing: -0.5px;
-    }
+        .logo-text span {
+            color: var(--sky-blue);
+        }
 
-    .logo-text span {
-      color: var(--sky-blue);
-    }
+        .subtitle {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
 
-    .subtitle {
-      font-size: 0.85rem;
-      color: #64748b;
-    }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
 
-    h2 {
-      margin-top: 0;
-      color: var(--primary-navy);
-      font-size: 1.15rem;
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 8px;
-    }
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--primary-navy);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    .location-badge {
-      font-size: 0.8rem;
-      color: #64748b;
-      margin-bottom: 12px;
-      display: block;
-    }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
 
-    label {
-      font-weight: 600;
-      font-size: 0.85rem;
-      margin-top: 10px;
-      margin-bottom: 4px;
-      display: block;
-    }
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+        }
 
-    input, select, textarea, button {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      box-sizing: border-box;
-      font-size: 0.95rem;
-    }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
 
-    .checkbox-group {
-      display: flex;
-      gap: 16px;
-      margin-top: 10px;
-    }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--sky-blue);
+        }
 
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: normal;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
+        .btn {
+            background-color: var(--sky-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
 
-    .checkbox-label input {
-      width: auto;
-    }
+        .btn:active {
+            opacity: 0.9;
+        }
 
-    textarea {
-      resize: vertical;
-      min-height: 80px;
-      font-family: inherit;
-    }
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: var(--primary-navy);
+        }
 
-    button {
-      background: var(--sky-blue);
-      color: white;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-      transition: opacity 0.2s;
-    }
+        .btn-danger {
+            background-color: #fee2e2;
+            color: var(--danger);
+        }
 
-    button:hover {
-      opacity: 0.9;
-    }
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
 
-    .btn-secondary { background: var(--primary-navy); }
-    .btn-parse { background: #8b5cf6; }
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
 
-    .info-box {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      padding: 12px;
-      border-radius: 10px;
-      margin-top: 14px;
-      font-size: 0.9rem;
-      line-height: 1.4;
-    }
+        .passenger-item {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            background-color: #f8fafc;
+        }
 
-    .passenger-card {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
+        .passenger-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
 
-    .passenger-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: bold;
-    }
+        .passenger-name {
+            font-weight: 700;
+            font-size: 15px;
+        }
 
-    .wait-badge {
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      color: white;
-    }
+        .passenger-details {
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.4;
+        }
 
-    .wait-green { background-color: var(--success); }
-    .wait-orange { background-color: var(--brand-yellow); }
-    .wait-red { background-color: var(--danger); }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #e2e8f0;
+        }
 
-    .tag-container {
-      display: flex;
-      gap: 6px;
-      margin-top: 6px;
-      flex-wrap: wrap;
-    }
-
-    .tag-badge {
-      font-size: 0.75rem;
-      font-weight: bold;
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-
-    .tag-gift { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
-    .tag-voucher { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-    .tag-weight { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-
-    .passenger-details {
-      font-size: 0.85rem;
-      color: #475569;
-      margin-top: 6px;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .btn-small {
-      padding: 6px 10px;
-      font-size: 0.8rem;
-      margin-top: 0;
-    }
-
-    .btn-danger { background-color: var(--danger); }
-    .btn-call { background-color: var(--success); }
-
-    .flex-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .parser-box {
-      background: #f3e8ff;
-      border: 1px solid #ddd6fe;
-      padding: 12px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-    }
-  </style>
+        .badge-voucher {
+            background: #fef3c7;
+            color: #92400e;
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
-
-  <div class="header">
-    <div class="logo-text">SKYRIDE <span>HUNGARY</span></div>
-    <div class="subtitle">Pilóta Dashboard & Utaskezelő Rendszer Pro</div>
-  </div>
-
-  <div class="card">
-    <h2>🌅 Repülési Ablak Előrejelzése</h2>
-    <span class="location-badge">📍 Starthely: Paks / Pusztahencsei térség (46.605389, 18.715306)</span>
-
-    <label for="targetDateSelect">Célnap kiválasztása:</label>
-    <div class="flex-row">
-      <input type="date" id="targetDateSelect">
-      <button type="button" onclick="fetchTargetWindowForecast()">Lekérés</button>
+    <div class="header">
+        <div class="logo-text">SKYRIDE <span>HUNGARY</span></div>
+        <div class="subtitle">Pilóta Dashboard & Utaskezelő Rendszer</div>
     </div>
 
-    <div class="info-box" id="weatherInfoBox" style="display: none;">
-      📍 <strong>Esti Előrejelzés a Start Időpontra:</strong><br>
-      🌅 Napnyugta: <span id="liveSunset">--:--</span> | 🪂 Start ablak: <span id="targetTimeText">--:--</span><br>
-      💨 Szél: <strong><span id="liveWindSpeed">-</span> km/h</strong> (Pöffök: <strong><span id="liveWindGusts">-</span> km/h</strong> | Irány: <span id="liveWindDirText">-</span>)
+    <!-- UTAS REGISZTRÁCIÓ -->
+    <div class="card">
+        <div class="card-title">➕ Új utas rögzítése</div>
+        <form id="passengerForm">
+            <div class="form-group">
+                <label>Utas neve *</label>
+                <input type="text" id="pName" required placeholder="pl. Kovács János">
+            </div>
+            <div class="btn-grid">
+                <div class="form-group">
+                    <label>Súly (kg) *</label>
+                    <input type="number" id="pWeight" required placeholder="75">
+                </div>
+                <div class="form-group">
+                    <label>Telefonszám *</label>
+                    <input type="tel" id="pPhone" required placeholder="+36301234567">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tervezett időszak / Megjegyzés</label>
+                <input type="text" id="pPeriod" placeholder="pl. hétvége / ajándékutalvány">
+            </div>
+            <div class="btn-grid">
+                <div class="form-group">
+                    <label>Ajándék volt?</label>
+                    <select id="pGift">
+                        <option value="nem">Nem</option>
+                        <option value="igen">Igen</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Voucher kártya kell?</label>
+                    <select id="pVoucher">
+                        <option value="nem">Nem</option>
+                        <option value="igen">Igen</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn">Mentés az utasListába</button>
+        </form>
     </div>
 
-    <label for="runwayDir">Várható pályairány:</label>
-    <select id="runwayDir">
-      <option value="Északi (É) - Déli (D)">⬆️ Északi (É) - Déli (D)</option>
-      <option value="Keleti (K) - Nyugati (NY)">➡️ Keleti (K) - Nyugati (NY)</option>
-      <option value="ÉK - DNY">↗️ ÉK - DNY</option>
-      <option value="ÉNY - DK">↖️ ÉNY - DK</option>
-    </select>
+    <!-- SABLON GENERÁTOR -->
+    <div class="card">
+        <div class="card-title">✉️ SMS Sablonok</div>
+        
+        <div class="form-group">
+            <label>Várható időjárás (Öltözködési tanácshoz)</label>
+            <select id="tempCategory">
+                <option value="mild">15–20 °C (Enyhe / Réteges)</option>
+                <option value="warm" selected>20–30 °C (Kellemes nyári)</option>
+                <option value="hot">30 °C felett (Kánikula)</option>
+            </select>
+        </div>
 
-    <button type="button" class="btn-secondary" onclick="generateBroadcastMessage()">Kör SMS / Messenger Sablon</button>
-  </div>
+        <div class="btn-grid">
+            <button class="btn btn-secondary" onclick="generateDataRequestTemplate()">1. Adatkérő sablon</button>
+            <button class="btn btn-secondary" onclick="generateFlightInviteTemplate()">2. Repülésre hívó</button>
+        </div>
 
-  <div class="card">
-    <h2>➕ Új Utas Felvétele</h2>
-
-    <div class="parser-box">
-      <label style="margin-top:0; color:#5b21b6;">⚡ Gyors beillesztés Messenger / SMS válaszból:</label>
-      <textarea id="rawMessageInput" placeholder="Illeszd be ide a megrendelő üzenetét..."></textarea>
-      <button type="button" class="btn-parse" onclick="parseIncomingMessage()">⚡ Mezők kitöltése üzenetből</button>
+        <div class="form-group" style="margin-top: 12px;">
+            <label>Generált üzenet (másolható):</label>
+            <textarea id="outputMsg" readonly></textarea>
+        </div>
+        <button class="btn" onclick="copyTemplate()">Másolás a vágólapra</button>
     </div>
 
-    <div class="flex-row">
-      <div style="flex:2;">
-        <label for="newPassengerName">Utas neve:</label>
-        <input type="text" id="newPassengerName" placeholder="pl. Kovács János">
-      </div>
-      <div style="flex:1;">
-        <label for="newWeight">Súly (kg):</label>
-        <input type="number" id="newWeight" placeholder="75">
-      </div>
+    <!-- UTASLISTA -->
+    <div class="card">
+        <div class="card-title">📋 Rögzített utasok</div>
+        <div id="passengerList">Még nincs rögzített utas.</div>
     </div>
-
-    <label for="newPhone">Telefonszám:</label>
-    <input type="tel" id="newPhone" placeholder="pl. +36301234567">
-
-    <label for="newRegDate">Regisztráció dátuma:</label>
-    <input type="date" id="newRegDate">
-
-    <label for="newPreferredPeriod">Tervezett repülési időszak / Preferencia:</label>
-    <input type="text" id="newPreferredPeriod" placeholder="pl. Hétvége / Következő hetek">
-
-    <label for="newNote">Megjegyzés:</label>
-    <input type="text" id="newNote" placeholder="pl. Különleges kérés...">
-
-    <div class="checkbox-group">
-      <label class="checkbox-label"><input type="checkbox" id="newIsGift"> 🎁 Ajándék</label>
-      <label class="checkbox-label"><input type="checkbox" id="newIsVoucher"> 🎟️ Voucher</label>
-    </div>
-
-    <button type="button" onclick="addPassenger()">Utas Hozzáadása a Várólistára</button>
-  </div>
-
-  <div class="card">
-    <h2>👥 Utasok Várakozási Rangsora</h2>
-    <div id="passengerList"></div>
-  </div>
-
-  <div class="card">
-    <h2>💬 Üzenet Sablon Generátor</h2>
-    <div class="flex-row" style="margin-bottom:8px;">
-      <button type="button" class="btn-secondary" onclick="generateDataRequestTemplate()">📋 Adatbekérő Sablon</button>
-    </div>
-    <textarea id="outputMsg" placeholder="A generált üzenet itt jelenik meg..."></textarea>
-    <button type="button" onclick="copyMessage()">Szöveg Másolása</button>
-  </div>
-
 </div>
 
 <script>
-    const LATITUDE = 46.605389;
-    const LONGITUDE = 18.715306;
+    // Koordináta alapú Google Térkép link
+    const MAPS_LINK = "https://maps.google.com/?q=46.6283,18.6534";
 
-    let currentForecast = null;
-    let passengers = JSON.parse(localStorage.getItem('skyride_passengers')) || [
-        { id: 1, name: "Kovács Béla", phone: "+36301234567", weight: 82, regDate: "2026-07-15", preferredPeriod: "Bármikor", note: "Páros meglepetés", isGift: true, isVoucher: true, rotations: 0 }
-    ];
+    let db;
+    const request = indexedDB.open("SkyrideDB", 1);
 
-    document.getElementById("targetDateSelect").valueAsDate = new Date();
-    document.getElementById("newRegDate").valueAsDate = new Date();
-    
-    renderPassengers();
+    request.onupgradeneeded = function(e) {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains("passengers")) {
+            db.createObjectStore("passengers", { keyPath: "id", autoIncrement: true });
+        }
+    };
 
-    function degreesToCompass(deg) {
-        const directions = ['É (N)', 'ÉÉK (NNE)', 'ÉK (NE)', 'KÉK (ENE)', 'K (E)', 'DK (ESE)', 'DK (SE)', 'DDK (SSE)', 'D (S)', 'DDNY (SSW)', 'DNY (SW)', 'NYDNY (WSW)', 'NY (W)', 'ÉNYÉ (WNW)', 'ÉNY (NW)', 'ÉÉNY (NNW)'];
-        return directions[Math.round(deg / 22.5) % 16];
+    request.onsuccess = function(e) {
+        db = e.target.result;
+        loadPassengers();
+    };
+
+    document.getElementById("passengerForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const passenger = {
+            name: document.getElementById("pName").value,
+            weight: document.getElementById("pWeight").value,
+            phone: document.getElementById("pPhone").value,
+            period: document.getElementById("pPeriod").value,
+            gift: document.getElementById("pGift").value,
+            voucher: document.getElementById("pVoucher").value,
+            date: new Date().toLocaleDateString('hu-HU')
+        };
+
+        const tx = db.transaction(["passengers"], "readwrite");
+        const store = tx.objectStore("passengers");
+        store.add(passenger);
+
+        tx.oncomplete = function() {
+            document.getElementById("passengerForm").reset();
+            loadPassengers();
+        };
+    });
+
+    function loadPassengers() {
+        const tx = db.transaction(["passengers"], "readonly");
+        const store = tx.objectStore("passengers");
+        const request = store.getAll();
+
+        request.onsuccess = function() {
+            const listContainer = document.getElementById("passengerList");
+            const passengers = request.result;
+
+            if (passengers.length === 0) {
+                listContainer.innerHTML = "<p style='color:#64748b; font-size:14px;'>Még nincs rögzített utas.</p>";
+                return;
+            }
+
+            listContainer.innerHTML = "";
+            passengers.forEach(p => {
+                const item = document.createElement("div");
+                item.className = "passenger-item";
+                item.innerHTML = `
+                    <div class="passenger-header">
+                        <span class="passenger-name">${p.name} (${p.weight} kg)</span>
+                        <button class="btn btn-danger" style="padding:4px 8px; width:auto; font-size:12px;" onclick="deletePassenger(${p.id})">Törlés</button>
+                    </div>
+                    <div class="passenger-details">
+                        📞 <a href="tel:${p.phone}">${p.phone}</a><br>
+                        📝 ${p.period || 'Nincs megjegyzés'}<br>
+                        ${p.gift === 'igen' ? '<span class="badge">Ajándék</span> ' : ''}
+                        ${p.voucher === 'igen' ? '<span class="badge badge-voucher">Voucher kért</span>' : ''}
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        };
     }
 
-    async function fetchTargetWindowForecast() {
-        try {
-            const selectedDateStr = document.getElementById("targetDateSelect").value;
-            if(!selectedDateStr) return alert("Válassz dátumot!");
-
-            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&hourly=windspeed_10m,winddirection_10m,windgusts_10m&daily=sunset&timezone=auto&start_date=${selectedDateStr}&end_date=${selectedDateStr}`);
-            const data = await res.json();
-
-            if(!data.daily || !data.daily.sunset) return alert("Nincs elérhető adat.");
-
-            const sunsetDate = new Date(data.daily.sunset[0]);
-            const flightTime = new Date(sunsetDate.getTime() - (90 * 60 * 1000));
-            
-            const hourlyTimes = data.hourly.time;
-            let targetIndex = hourlyTimes.findIndex(t => new Date(t).getHours() === flightTime.getHours());
-            if (targetIndex === -1) targetIndex = 0;
-
-            const windSpeed = Math.round(data.hourly.windspeed_10m[targetIndex]);
-            const windGusts = Math.round(data.hourly.windgusts_10m[targetIndex]);
-            const compassDir = degreesToCompass(data.hourly.winddirection_10m[targetIndex]);
-
-            currentForecast = {
-                dateStr: selectedDateStr,
-                sunset: sunsetDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' }),
-                flightTime: flightTime.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' }),
-                windSpeed: windSpeed,
-                windGusts: windGusts,
-                compassDir: compassDir
+    function deletePassenger(id) {
+        if (confirm("Biztosan törlöd ezt az utast?")) {
+            const tx = db.transaction(["passengers"], "readwrite");
+            const store = tx.objectStore("passengers");
+            store.delete(id);
+            tx.oncomplete = function() {
+                loadPassengers();
             };
-
-            document.getElementById("liveWindSpeed").innerText = windSpeed;
-            document.getElementById("liveWindGusts").innerText = windGusts;
-            document.getElementById("liveWindDirText").innerText = compassDir;
-            document.getElementById("liveSunset").innerText = currentForecast.sunset;
-            document.getElementById("targetTimeText").innerText = currentForecast.flightTime;
-            
-            document.getElementById("weatherInfoBox").style.display = "block";
-        } catch (err) {
-            alert("⚠️ Hiba az adatok lekérésekor.");
         }
     }
 
-    function calculateWaitDays(regDateStr) {
-        const regDate = new Date(regDateStr);
-        const today = new Date();
-        const diffTime = Math.abs(today - regDate);
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    }
-
-    function renderPassengers() {
-        passengers.sort((a, b) => new Date(a.regDate) - new Date(b.regDate));
-
-        const container = document.getElementById("passengerList");
-        container.innerHTML = "";
-
-        passengers.forEach(p => {
-            const waitDays = calculateWaitDays(p.regDate);
-            let badgeClass = "wait-green";
-            if(waitDays > 30) badgeClass = "wait-red";
-            else if(waitDays > 14) badgeClass = "wait-orange";
-
-            const item = document.createElement("div");
-            item.className = "passenger-card";
-            item.innerHTML = `
-                <div class="passenger-header">
-                    <span>${p.name}</span>
-                    <span class="wait-badge ${badgeClass}">${waitDays} napja vár</span>
-                </div>
-                <div class="tag-container">
-                    ${p.weight ? `<span class="tag-badge tag-weight">⚖️ ${p.weight} kg</span>` : ''}
-                    ${p.isGift ? '<span class="tag-badge tag-gift">🎁 Ajándék</span>' : ''}
-                    ${p.isVoucher ? '<span class="tag-badge tag-voucher">🎟️ Voucher</span>' : ''}
-                </div>
-                <div class="passenger-details">
-                    📞 Tel: ${p.phone || 'Nincs megadva'}<br>
-                    📅 Regisztráció: ${p.regDate}<br>
-                    🗓️ Tervezett időszak: ${p.preferredPeriod || 'Nincs megadva'}<br>
-                    📝 Megjegyzés: ${p.note || 'Nincs'}<br>
-                    🔄 Sor végére küldve: ${p.rotations || 0} alkalommal
-                </div>
-                <div class="btn-group">
-                    ${p.phone ? `<a href="tel:${p.phone}" style="text-decoration:none;"><button class="btn-small btn-call">📞 Hívás</button></a>` : ''}
-                    <button class="btn-small" onclick="generateDirectMessage('${p.name}')">📱 Üzenet</button>
-                    <button class="btn-small btn-secondary" onclick="rotateToBottom(${p.id})">🔄 Sor végére</button>
-                    <button class="btn-small btn-danger" onclick="removePassenger(${p.id})">✕ Törlés</button>
-                </div>
-            `;
-            container.appendChild(item);
-        });
-
-        localStorage.setItem('skyride_passengers', JSON.stringify(passengers));
-    }
-
-    function addPassenger() {
-        const nameInput = document.getElementById("newPassengerName");
-        const weightInput = document.getElementById("newWeight");
-        const phoneInput = document.getElementById("newPhone");
-        const regDateInput = document.getElementById("newRegDate");
-        const periodInput = document.getElementById("newPreferredPeriod");
-        const noteInput = document.getElementById("newNote");
-
-        if(!nameInput.value.trim()) return alert("Kérlek, add meg az utas nevét!");
-
-        passengers.push({
-            id: Date.now(),
-            name: nameInput.value.trim(),
-            weight: weightInput.value ? parseInt(weightInput.value) : '',
-            phone: phoneInput.value.trim() || '',
-            regDate: regDateInput.value || new Date().toISOString().split('T')[0],
-            preferredPeriod: periodInput.value.trim() || '',
-            note: noteInput.value.trim() || '',
-            isGift: document.getElementById("newIsGift").checked,
-            isVoucher: document.getElementById("newIsVoucher").checked,
-            rotations: 0
-        });
-
-        nameInput.value = "";
-        weightInput.value = "";
-        phoneInput.value = "";
-        periodInput.value = "";
-        noteInput.value = "";
-        document.getElementById("rawMessageInput").value = "";
-        document.getElementById("newIsGift").checked = false;
-        document.getElementById("newIsVoucher").checked = false;
-        
-        renderPassengers();
-    }
-
-    function parseIncomingMessage() {
-        const text = document.getElementById("rawMessageInput").value;
-        if (!text.trim()) return alert("Először illeszd be az üzenetet!");
-
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-        
-        let foundName = false;
-        let foundWeight = false;
-        let foundPhone = false;
-        let foundPeriod = false;
-
-        lines.forEach((line, index) => {
-            const lower = line.toLowerCase();
-
-            // 1. TELEFONSZÁM
-            if (!foundPhone && (lower.includes("+36") || lower.includes("06") || line.replace(/\s+/g, '').match(/^\+?\d{9,12}$/))) {
-                const match = line.match(/[\+\d\s]{8,}/);
-                if (match) {
-                    document.getElementById("newPhone").value = match[0].trim();
-                    foundPhone = true;
-                    return;
-                }
-            }
-
-            // 2. SÚLY
-            if (!foundWeight && (lower.includes("kg") || lower.includes("suly") || lower.includes("súly") || (!isNaN(parseInt(line)) && parseInt(line) > 30 && parseInt(line) < 150))) {
-                const match = line.match(/\d+/);
-                if (match) {
-                    document.getElementById("newWeight").value = match[0];
-                    foundWeight = true;
-                    return;
-                }
-            }
-
-            // 3. AJÁNDÉK ÉS VOUCHER
-            if (lower.includes("ajándék") || lower.includes("ajandek")) {
-                document.getElementById("newIsGift").checked = lower.includes("igen");
-                return;
-            }
-            if (lower.includes("voucher")) {
-                document.getElementById("newIsVoucher").checked = lower.includes("igen");
-                return;
-            }
-
-            // 4. NÉV
-            if (!foundName) {
-                if (lower.includes("név:") || lower.includes("nev:")) {
-                    document.getElementById("newPassengerName").value = line.split(":")[1]?.trim() || "";
-                    foundName = true;
-                    return;
-                } else if (index === 0 && !/\d/.test(line)) { 
-                    document.getElementById("newPassengerName").value = line;
-                    foundName = true;
-                    return;
-                }
-            }
-
-            // 5. TERVEZETT IDŐSZAK
-            if (!foundPeriod) {
-                if (lower.includes("tervezett") || lower.includes("időszak") || lower.includes("idoszak")) {
-                    document.getElementById("newPreferredPeriod").value = line.split(":")[1]?.trim() || "";
-                    foundPeriod = true;
-                    return;
-                } else if (foundName && foundPhone && !lower.includes("megjegyzés")) {
-                    document.getElementById("newPreferredPeriod").value = line;
-                    foundPeriod = true;
-                    return;
-                }
-            }
-
-            // 6. MEGJEGYZÉS
-            if (lower.includes("megjegyzés") || lower.includes("megjegyzes")) {
-                document.getElementById("newNote").value = line.split(":")[1]?.trim() || "";
-            }
-        });
-
-        alert("✅ Mezők kitöltve! Ellenőrizd az adatokat, majd nyomj az 'Utas Hozzáadása' gombra.");
-    }
-
-    function rotateToBottom(id) {
-        const p = passengers.find(item => item.id === id);
-        if(p) {
-            p.regDate = new Date().toISOString().split('T')[0];
-            p.rotations = (p.rotations || 0) + 1;
-            renderPassengers();
-        }
-    }
-
-    function removePassenger(id) {
-        if(confirm("Biztosan törlöd ezt az utast?")) {
-            passengers = passengers.filter(p => p.id !== id);
-            renderPassengers();
-        }
-    }
-
+    // 1. ADATKÉRŐ SABLON GENERÁLÁSA (Aktuális hónappal)
     function generateDataRequestTemplate() {
         const currentMonthName = new Date().toLocaleString('hu-HU', { month: 'long' });
         const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak (pl. ${currentMonthName} közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:`;
-        const outputField = document.getElementById("outputMsg");
-        outputField.value = msg;
-        outputField.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function generateBroadcastMessage() {
-        const dateStr = document.getElementById("targetDateSelect").value;
-        const runway = document.getElementById("runwayDir").value;
-        const timeStr = currentForecast ? currentForecast.flightTime : 'az esti órákban';
-        const windStr = currentForecast ? `${currentForecast.windSpeed} km/h (pöffök: ${currentForecast.windGusts} km/h, ${currentForecast.compassDir})` : 'kedvező';
-
-        const msg = `Szia! A Skyride Hungary repülési ablakot hirdet ${dateStr}-án kb. ${timeStr}-tól. Várható szél: ${windStr}, pályairány: ${runway}. Jelezz vissza, ha szeretnél repülni!`;
-        const outputField = document.getElementById("outputMsg");
-        outputField.value = msg;
-        outputField.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function generateDirectMessage(name) {
-        const dateStr = document.getElementById("targetDateSelect").value;
-        const timeStr = currentForecast ? currentForecast.flightTime : 'az esti órákban';
-        const msg = `Szia ${name}! A Skyride repülésed időpontja ${dateStr}-án várhatóan ${timeStr}-kor lesz. Kérlek jelezz vissza, ha megfelel neked!`;
         
         const outputField = document.getElementById("outputMsg");
         outputField.value = msg;
         outputField.scrollIntoView({ behavior: 'smooth' });
     }
 
-    function copyMessage() {
-        const textarea = document.getElementById("outputMsg");
-        if(!textarea.value) return;
-        textarea.select();
+    // 2. REPÜLÉSRE HÍVÓ SABLON GENERÁLÁSA (Öltözködéssel & Térkép Linkkel)
+    function generateFlightInviteTemplate() {
+        const tempCategory = document.getElementById("tempCategory").value;
+        let clothingAdvice = "";
+
+        if (tempCategory === "mild") {
+            clothingAdvice = "Kényelmes, réteges hosszú ruházat és zárt cipő javasolt (a magasban hűvösebb lehet a szél miatt).";
+        } else if (tempCategory === "warm") {
+            clothingAdvice = "Kényelmes, könnyű nyári ruházat és zárt sportcipő tökéletes a repüléshez.";
+        } else if (tempCategory === "hot") {
+            clothingAdvice = "Könnyű, szellős nyári öltözet és zárt cipő javasolt (ne felejts el napszemüveget hozni!).";
+        }
+
+        const msg = `Szia! Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n📍 Helyszín / Navigáció:\n${MAPS_LINK}\n\n👕 Öltözet:\n${clothingAdvice}\n\nKérlek jelezz vissza, hogy megfelelő-e az időpont!`;
+
+        const outputField = document.getElementById("outputMsg");
+        outputField.value = msg;
+        outputField.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyTemplate() {
+        const outputField = document.getElementById("outputMsg");
+        if (!outputField.value) {
+            alert("Először generálj egy sablont!");
+            return;
+        }
+        outputField.select();
         document.execCommand("copy");
         alert("Üzenet másolva a vágólapra!");
     }
