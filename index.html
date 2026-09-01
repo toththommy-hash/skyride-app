@@ -433,6 +433,7 @@
             const data = await res.json();
 
             // Segédfüggvény: megkeresi az óránkénti adat indexét a kiválasztott nap és óra alapján
+            let arrivalDate = null;
             function findHourIndex(hour) {
                 if (!data.hourly || !data.hourly.time) return 0;
                 const target = `${selectedDate}T${String(hour).padStart(2, '0')}:00`;
@@ -440,11 +441,23 @@
                 return idx >= 0 ? idx : 0;
             }
 
+            function findClosestHourIndexByDate(targetDate) {
+                if (!data.hourly || !data.hourly.time) return 0;
+                let closest = 0;
+                let minDiff = Infinity;
+                for (let i = 0; i < data.hourly.time.length; i++) {
+                    const d = new Date(data.hourly.time[i]);
+                    const diff = Math.abs(d - targetDate);
+                    if (diff < minDiff) { minDiff = diff; closest = i; }
+                }
+                return closest;
+            }
+
             let targetHour = 18; // Alapértelmezett esti óra, ha nincs napnyugta adat
 
             if (data.daily && data.daily.sunset && data.daily.sunset[0]) {
                 const sunsetDate = new Date(data.daily.sunset[0]);
-                const arrivalDate = new Date(sunsetDate.getTime() - (90 * 60 * 1000));
+                arrivalDate = new Date(sunsetDate.getTime() - (90 * 60 * 1000));
                 
                 calculatedSunset = sunsetDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
                 calculatedArrivalTime = arrivalDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
@@ -453,7 +466,7 @@
                 targetHour = Math.max(0, sunsetDate.getHours() - 1);
             }
 
-            const idx = findHourIndex(targetHour);
+            const idx = arrivalDate ? findClosestHourIndexByDate(arrivalDate) : findHourIndex(targetHour);
 
             // Esti repülési ablak adatainak kinyerése
             let temp = Math.round((data.hourly && data.hourly.temperature_2m && data.hourly.temperature_2m[idx]) || (data.daily && data.daily.temperature_2m_max && data.daily.temperature_2m_max[0]) || 0);
