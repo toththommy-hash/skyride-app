@@ -412,8 +412,7 @@
         document.getElementById("weatherDate").value = todayStr;
         document.getElementById("pFlightDate").value = todayStr;
     });
-
-    // --- IDŐJÁRÁS & NAPNYUGTA LEKÉRDEZÉS DÁTUM ALAPJÁN ---
+// --- IDŐJÁRÁS & NAPNYUGTA LEKÉRDEZÉS (ESTI REPÜLÉSI ABLAKRA FINOMHANGOLVA) ---
     async function fetchWeather() {
         const container = document.getElementById("weatherContent");
         const selectedDate = document.getElementById("weatherDate").value || new Date().toISOString().split('T')[0];
@@ -421,14 +420,11 @@
         container.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Szél- és napnyugta adatok lekérése...</p>";
 
         try {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAUNCH_SITE.lat}&longitude=${LAUNCH_SITE.lon}&daily=sunset,temperature_2m_max,windspeed_10m_max,windgusts_10m_max&hourly=temperature_2m,windspeed_10m,windgusts_10m,winddirection_10m&timezone=Europe%2FBudapest&start_date=${selectedDate}&end_date=${selectedDate}`;
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAUNCH_SITE.lat}&longitude=${LAUNCH_SITE.lon}&daily=sunset,temperature_2m_max&hourly=temperature_2m,windspeed_10m,windgusts_10m,winddirection_10m&timezone=Europe%2FBudapest&start_date=${selectedDate}&end_date=${selectedDate}`;
             const res = await fetch(url);
             const data = await res.json();
 
-            let temp = data.daily ? data.daily.temperature_2m_max[0] : 22;
-            let windSpeed = data.daily ? data.daily.windspeed_10m_max[0] : 10;
-            let windGust = data.daily ? data.daily.windgusts_10m_max[0] : windSpeed;
-            let windDirDegree = (data.hourly && data.hourly.winddirection_10m) ? data.hourly.winddirection_10m[18] || 180 : 180;
+            let targetHour = 18; // Alapértelmezett esti óra, ha nincs napnyugta adat
 
             if (data.daily && data.daily.sunset && data.daily.sunset[0]) {
                 const sunsetDate = new Date(data.daily.sunset[0]);
@@ -436,7 +432,16 @@
                 
                 calculatedSunset = sunsetDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
                 calculatedArrivalTime = arrivalDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+
+                // A napnyugta előtti órára célzunk a széladatoknál (napnyugta - 1 óra)
+                targetHour = Math.max(0, sunsetDate.getHours() - 1);
             }
+
+            // Esti repülési ablak adatainak kinyerése (napi max helyett a targetHour-os érték)
+            let temp = Math.round(data.hourly.temperature_2m[targetHour] || data.daily.temperature_2m_max[0]);
+            let windSpeed = Math.round(data.hourly.windspeed_10m[targetHour] || 10);
+            let windGust = Math.round(data.hourly.windgusts_10m[targetHour] || windSpeed);
+            let windDirDegree = data.hourly.winddirection_10m[targetHour] || 180;
 
             updateTempDropdown(temp);
             const dirText = degreeToCompass(windDirDegree);
@@ -456,20 +461,20 @@
 
             container.innerHTML = `
                 <div style="font-size:12px; color:var(--brand-orange); text-align:center; font-weight:bold; margin-bottom:6px;">
-                    📅 ${formattedDisplayDate}
+                    📅 ${formattedDisplayDate} (Esti sáv ~${targetHour}:00)
                 </div>
                 <div class="weather-grid">
                     <div class="weather-stat">
                         <div class="val">${temp} °C</div>
-                        <div class="lbl">Max Hőmérséklet</div>
+                        <div class="lbl">Esti Hőmérséklet</div>
                     </div>
                     <div class="weather-stat">
                         <div class="val">${windSpeed} km/h</div>
-                        <div class="lbl">Várható Szél</div>
+                        <div class="lbl">Átlagos Szél</div>
                     </div>
                     <div class="weather-stat">
                         <div class="val" style="color:${windGust > 20 ? 'var(--brand-orange)' : 'inherit'};">${windGust} km/h</div>
-                        <div class="lbl">Max Széllökés</div>
+                        <div class="lbl">Széllökés</div>
                     </div>
                     <div class="weather-stat">
                         <div class="val">${dirText}</div>
@@ -491,6 +496,7 @@
             container.innerHTML = "<p style='color:var(--danger); text-align:center;'>Hiba történt az időjárási adatok lekérésekor.</p>";
         }
     }
+    
 
     function degreeToCompass(deg) {
         const directions = ['É', 'ÉK', 'K', 'DK', 'D', 'DNy', 'Ny', 'ÉNy'];
