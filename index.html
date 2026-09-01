@@ -420,9 +420,25 @@
         container.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Szél- és napnyugta adatok lekérése...</p>";
 
         try {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAUNCH_SITE.lat}&longitude=${LAUNCH_SITE.lon}&daily=sunset,temperature_2m_max&hourly=temperature_2m,windspeed_10m,windgusts_10m,winddirection_10m&timezone=Europe%2FBudapest&start_date=${selectedDate}&end_date=${selectedDate}`;
+            const startDate = selectedDate;
+            const endDate = selectedDate;
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAUNCH_SITE.lat}&longitude=${LAUNCH_SITE.lon}` +
+                        `&hourly=temperature_2m,windspeed_10m,windgusts_10m,winddirection_10m` +
+                        `&daily=sunset,temperature_2m_max` +
+                        `&start_date=${startDate}&end_date=${endDate}` +
+                        `&timezone=Europe%2FBudapest`;
+
             const res = await fetch(url);
+            if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
             const data = await res.json();
+
+            // Segédfüggvény: megkeresi az óránkénti adat indexét a kiválasztott nap és óra alapján
+            function findHourIndex(hour) {
+                if (!data.hourly || !data.hourly.time) return 0;
+                const target = `${selectedDate}T${String(hour).padStart(2, '0')}:00`;
+                const idx = data.hourly.time.findIndex(t => t === target || t.startsWith(target));
+                return idx >= 0 ? idx : 0;
+            }
 
             let targetHour = 18; // Alapértelmezett esti óra, ha nincs napnyugta adat
 
@@ -437,11 +453,13 @@
                 targetHour = Math.max(0, sunsetDate.getHours() - 1);
             }
 
-            // Esti repülési ablak adatainak kinyerése (napi max helyett a targetHour-os érték)
-            let temp = Math.round(data.hourly.temperature_2m[targetHour] || data.daily.temperature_2m_max[0]);
-            let windSpeed = Math.round(data.hourly.windspeed_10m[targetHour] || 10);
-            let windGust = Math.round(data.hourly.windgusts_10m[targetHour] || windSpeed);
-            let windDirDegree = data.hourly.winddirection_10m[targetHour] || 180;
+            const idx = findHourIndex(targetHour);
+
+            // Esti repülési ablak adatainak kinyerése
+            let temp = Math.round((data.hourly && data.hourly.temperature_2m && data.hourly.temperature_2m[idx]) || (data.daily && data.daily.temperature_2m_max && data.daily.temperature_2m_max[0]) || 0);
+            let windSpeed = Math.round((data.hourly && data.hourly.windspeed_10m && data.hourly.windspeed_10m[idx]) || 0);
+            let windGust = Math.round((data.hourly && data.hourly.windgusts_10m && data.hourly.windgusts_10m[idx]) || windSpeed || 0);
+            let windDirDegree = (data.hourly && data.hourly.winddirection_10m && data.hourly.winddirection_10m[idx]) || 180;
 
             updateTempDropdown(temp);
             const dirText = degreeToCompass(windDirDegree);
@@ -493,6 +511,7 @@
                 <button class="btn btn-secondary btn-full" style="margin-top:10px;" onclick="fetchWeather()">Frissítés</button>
             `;
         } catch (err) {
+            console.error(err);
             container.innerHTML = "<p style='color:var(--danger); text-align:center;'>Hiba történt az időjárási adatok lekérésekor.</p>";
         }
     }
@@ -615,8 +634,8 @@
             const filterQuery = (document.getElementById("searchInput").value || "").toLowerCase().trim();
             if (filterQuery) {
                 passengers = passengers.filter(p => 
-                    p.name.toLowerCase().includes(filterQuery) || 
-                    p.phone.includes(filterQuery)
+                    (p.name || "").toLowerCase().includes(filterQuery) || 
+                    (p.phone || "").includes(filterQuery)
                 );
             }
 
@@ -696,8 +715,7 @@
     // --- SABLON GENERÁTOROK ---
     function generateDataRequestTemplate() {
         const currentMonthName = new Date().toLocaleString('hu-HU', { month: 'long' });
-        
-        const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak / dátum (pl. ${currentMonthName} közepe / hétvége):\nAjándék lesz? (igen/nem):\nVoucher kártyát kérsz? (igen/nem):\nMegjegyzés:\n\nℹ️ Fontos infó: Az időjárási bizonytalanságok miatt a naptáramat rugalmasan kezeljük. Amennyiben 3 egymást követő alkalommal nem tudunk időpontot egyeztetni vagy visszamondásra kerül a repülés, a regisztrációd automatikusan a várólista végére sorolódik.`;
+        const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak / dátum (pl. ${currentMonthName} 15.)\n\nKöszönöm!`;
         
         document.getElementById("outputMsg").value = msg;
     }
@@ -722,13 +740,13 @@
             clothingAdvice = "Könnyű nyári öltözet és zárt cipő (hozz magaddal napszemüveget is!).";
         }
 
-        const msg = `Szia! Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n📅 Dátum: ${formattedDateStr}\n⏰ Érkezési idő: ${meetingTime} (napnyugta előtt 1,5 órával találkozunk).\n\n📍 Felszállási Helyszín / Navigáció:\n${LAUNCH_SITE.mapsUrl}\n\n👕 Öltözet ajánlás:\n${clothingAdvice}\n\nKérlek jelezz vissza, hogy megfelelő-e az időpont!\nTovábbi kérdés esetén: ${PILOT_PHONE} (Tóth Tamás - Skyride Hungary)`;
-
+        const msg = `Szia! Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n📅 Dátum: ${formattedDateStr}\n⏰ Érkezési idő: ${meetingTime} (napnyugta előtt)\n📍 Helyszín: ${LAUNCH_SITE.mapsUrl}\n\n${clothingAdvice}\n\nKérlek válaszolj, hogy biztosan számolhassunk veled. Köszi!`;
+        
         document.getElementById("outputMsg").value = msg;
     }
 
     function generateDemoteTemplate() {
-        const msg = `Szia! Mivel a mai napra felajánlott időpont sem volt megfelelő számodra, a szabályzatunknak megfelelően a regisztrációdat automatikusan a várólistánk végére soroltuk.\n\nAmint az előtted lévő várakozókkal egyeztettünk, vagy újra nyílik szabad kapacitásunk a repülésekre, jelentkezni fogunk nálad a következő lehetőséggel!\n\nKöszönjük a megértésedet! 😊\nTóth Tamás - Skyride Hungary (${PILOT_PHONE})`;
+        const msg = `Szia! Mivel a mai napra felajánlott időpont sem volt megfelelő számodra, a szabályzatunknak megfelelően a regisztrációdat automatikusan a várólistánk végére soroltuk. Amint új lehetőség nyílik, értesítünk. Köszönjük a megértést.`;
 
         document.getElementById("outputMsg").value = msg;
     }
