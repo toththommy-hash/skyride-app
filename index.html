@@ -32,7 +32,7 @@
 
         .container {
             width: 100%;
-            max-width: 650px;
+            max-width: 680px;
             display: flex;
             flex-direction: column;
             gap: 16px;
@@ -112,10 +112,10 @@
             background-color: var(--brand-orange);
             color: #ffffff;
             border: none;
-            padding: 12px 14px;
+            padding: 10px 14px;
             border-radius: 8px;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             transition: background 0.2s, opacity 0.2s;
             display: inline-flex;
@@ -140,11 +140,42 @@
             gap: 8px;
         }
 
-        .btn-grid-3 {
+        .btn-grid-4 {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 6px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
         }
+
+        /* 7 NAPOS HETI ELŐREJELZÉS STÍLUSOK */
+        .week-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-bottom: 14px;
+            overflow-x: auto;
+        }
+
+        .day-card {
+            background: #242424;
+            border-radius: 8px;
+            padding: 8px 4px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+
+        .day-card:hover { transform: translateY(-2px); }
+        .day-card.selected { border-color: #ffffff !important; }
+        
+        .day-card .day-name { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .day-card .day-date { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+        .day-card .day-wind { font-size: 12px; font-weight: 800; }
+        .day-card .day-status { font-size: 9px; margin-top: 3px; border-radius: 4px; padding: 2px 0; font-weight: bold; }
+
+        .fly-ok { background-color: #064e3b; color: #a7f3d0; border: 1px solid #065f46; }
+        .fly-warn { background-color: #78350f; color: #fde68a; border: 1px solid #92400e; }
+        .fly-no { background-color: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; }
 
         .weather-grid {
             display: grid;
@@ -155,24 +186,14 @@
 
         .weather-stat {
             background: #262626;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             text-align: center;
             border: 1px solid #333;
         }
 
-        .weather-stat .val {
-            font-size: 18px;
-            font-weight: 800;
-            color: #ffffff;
-        }
-
-        .weather-stat .lbl {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-top: 4px;
-        }
+        .weather-stat .val { font-size: 17px; font-weight: 800; color: #ffffff; }
+        .weather-stat .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
 
         .hourly-table {
             width: 100%;
@@ -187,22 +208,16 @@
             border-bottom: 1px solid #333;
         }
 
-        .hourly-table th {
-            color: var(--brand-orange);
-            background-color: #262626;
-        }
+        .hourly-table th { color: var(--brand-orange); background-color: #262626; }
 
         .status-banner {
             margin-top: 12px;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             font-weight: 700;
             text-align: center;
             font-size: 13px;
         }
-        .status-ok { background-color: #064e3b; color: #a7f3d0; border: 1px solid #065f46; }
-        .status-warn { background-color: #78350f; color: #fde68a; border: 1px solid #92400e; }
-        .status-danger { background-color: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; }
 
         .stats-bar {
             display: flex;
@@ -222,7 +237,6 @@
             padding: 14px;
             margin-bottom: 10px;
             background-color: #242424;
-            transition: all 0.2s;
         }
 
         .passenger-item.demoted {
@@ -238,11 +252,7 @@
             margin-bottom: 8px;
         }
 
-        .passenger-name {
-            font-weight: 700;
-            font-size: 16px;
-            color: #ffffff;
-        }
+        .passenger-name { font-weight: 700; font-size: 16px; color: #ffffff; }
 
         .badge {
             display: inline-block;
@@ -256,6 +266,7 @@
         .badge-demoted { background: #7f1d1d; color: #fca5a5; }
         .badge-voucher { background: #78350f; color: #fde68a; }
         .badge-gift { background: #312e81; color: #c7d2fe; }
+        .badge-sms { background: #1e3a8a; color: #93c5fd; border: 1px solid #2563eb; }
 
         .passenger-actions {
             display: flex;
@@ -264,11 +275,7 @@
             flex-wrap: wrap;
         }
 
-        textarea {
-            resize: vertical;
-            min-height: 110px;
-            font-family: inherit;
-        }
+        textarea { resize: vertical; min-height: 120px; font-family: inherit; line-height: 1.4; }
 
         .parser-box {
             background: #262626;
@@ -283,7 +290,7 @@
             padding: 10px;
             border-radius: 8px;
             color: var(--text-muted);
-            font-size: 13px;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -293,26 +300,33 @@
     <!-- FEJLÉC -->
     <div class="header">
         <div class="logo-text">SKYRIDE <span>HUNGARY</span></div>
-        <div class="subtitle">Pilóta Dashboard • Felszállóhely: Nagydorog / Kajdacs zóna</div>
+        <div class="subtitle">Pilóta Dashboard • Nagydorog / Kajdacs zóna</div>
     </div>
 
-    <!-- 1. IDŐJÁRÁS & DÁTUM VÁLASZTÓ MODUL -->
+    <!-- 1. HETI SZÍNKÓDOLT REPLÜHETŐSÉGI NAPTÁR & IDŐJÁRÁS -->
     <div class="card">
         <div class="card-title">
-            <span>💨 Szél & Időjárás Előrejelzés</span>
+            <span>🗓️ 7 Napos Repülhetőségi Naptár</span>
             <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">GPS: 46.6054, 18.7153</span>
         </div>
 
-        <div class="form-group">
-            <label>📅 Repülés Tervezett Napja:</label>
+        <!-- 7 Napos színezett rács -->
+        <div id="weekContainer" class="week-grid">
+            <div style="grid-column: span 7; text-align:center; color:var(--text-muted); font-size:12px; padding:10px;">
+                Heti előrejelzés betöltése...
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label>📅 Kiválasztott Részletes Nap:</label>
             <input type="date" id="weatherDate" onchange="fetchWeather()">
         </div>
 
         <div id="weatherContent">
-            <button class="btn btn-secondary btn-full" onclick="fetchWeather()">Szél- és Napnyugta Adatok Frissítése</button>
+            <button class="btn btn-secondary btn-full" onclick="fetchWeather()">Frissítés</button>
         </div>
 
-        <!-- Grafikon -->
+        <!-- Chart.js szélgrafikon -->
         <canvas id="weatherChart" style="width:100%; height:120px; display:none; margin-top:12px;"></canvas>
     </div>
 
@@ -322,7 +336,7 @@
         
         <div class="parser-box">
             <label style="color:var(--brand-orange); margin-bottom:6px; display:block;">📲 SMS Válasz Beillesztése & Automatizálás</label>
-            <textarea id="rawSmsInput" style="min-height:70px; margin-bottom:8px;" placeholder="Másold ide az utas által visszaküldött SMS szövegét..."></textarea>
+            <textarea id="rawSmsInput" style="min-height:60px; margin-bottom:8px;" placeholder="Másold ide az utas által visszaküldött SMS szövegét..."></textarea>
             <div class="btn-grid">
                 <button type="button" class="btn btn-secondary" onclick="pasteFromClipboard()">📋 Beillesztés Vágólapról</button>
                 <button type="button" class="btn" onclick="parseSmsText()">⚡ Adatok Kinyerése</button>
@@ -374,13 +388,16 @@
         </form>
     </div>
 
-    <!-- 3. DINAMIKUS SMS SABLON GENERÁTOR -->
+    <!-- 3. DINAMIKUS SMS SABLON GENERÁTOR & TÁJÉKOZTATÓ -->
     <div class="card">
-        <div class="card-title">✉️ SMS / Üzenet Sablonok</div>
+        <div class="card-title">✉️ SMS & Tájékoztató Sablonok</div>
         
         <div class="form-group">
-            <label>Címzett Utas Telefonszáma (opcionális)</label>
-            <input type="tel" id="targetPhone" placeholder="+36301234567 (hagyhatod üresen is)">
+            <label>Címzett Utas Telefonszáma / Neve (opcionális)</label>
+            <div class="btn-grid">
+                <input type="tel" id="targetPhone" placeholder="+36301234567">
+                <input type="text" id="targetName" placeholder="Utas neve">
+            </div>
         </div>
 
         <div class="form-group">
@@ -392,37 +409,36 @@
             </select>
         </div>
 
-        <div class="btn-grid-3">
-            <button class="btn btn-secondary" style="font-size:12px; padding:10px 4px;" onclick="generateDataRequestTemplate()">1. Adatkérő</button>
-            <button class="btn btn-secondary" style="font-size:12px; padding:10px 4px;" onclick="generateFlightInviteTemplate()">2. Hívó SMS</button>
-            <button class="btn btn-secondary" style="font-size:12px; padding:10px 4px; color:#fca5a5;" onclick="generateDemoteTemplate()">3. Hátrasoroló</button>
+        <div class="btn-grid-4">
+            <button class="btn btn-secondary" style="font-size:11px;" onclick="generateDataRequestTemplate()">1. Adatkérő & Szabályok</button>
+            <button class="btn btn-secondary" style="font-size:11px;" onclick="generateFlightInviteTemplate()">2. Hívó SMS</button>
+            <button class="btn btn-secondary" style="font-size:11px; color:#fde68a;" onclick="generateInfoTemplate()">3. Időjárási Halasztó</button>
+            <button class="btn btn-secondary" style="font-size:11px; color:#fca5a5;" onclick="generateDemoteTemplate()">4. Hátrasoroló</button>
         </div>
 
         <div class="form-group" style="margin-top: 12px;">
             <label>Generált üzenet (Másolható / Küldhető):</label>
-            <textarea id="outputMsg" placeholder="Kattints a fenti gombok egyikére..."></textarea>
+            <textarea id="outputMsg" placeholder="Kattints a fenti sablonok egyikére..."></textarea>
         </div>
         <div class="btn-grid">
-            <button class="btn" onclick="copyTemplate()">📋 Vágólapra Másolás</button>
+            <button class="btn" onclick="copyTemplate()">📋 Másolás Vágólapra</button>
             <button class="btn btn-success" onclick="sendDirectSMS()">💬 Megnyitás SMS-ben</button>
         </div>
     </div>
 
-    <!-- 4. UTASLISTA (STATISZTIKA, KERESŐ & 3 DOBÁS ELVE) -->
+    <!-- 4. UTASLISTA (STATISZTIKA, KERESŐ, HÁTRASOROLÁS & SMS STÁTUSZ) -->
     <div class="card">
         <div class="card-title">
-            <span>📋 Utaslista & Hátrasorolás</span>
+            <span>📋 Utaslista & Nyomonkövetés</span>
             <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">(3 dobás elve)</span>
         </div>
 
-        <!-- STATISZTIKAI SÁV -->
         <div class="stats-bar">
-            <span>Összes Utas: <span id="statTotal" style="color:var(--brand-orange);">0</span></span>
+            <span>Összes: <span id="statTotal" style="color:var(--brand-orange);">0</span></span>
             <span>Aktív: <span id="statActive" style="color:var(--success);">0</span></span>
-            <span>Hátrasorolt (3+): <span id="statDemoted" style="color:var(--danger);">0</span></span>
+            <span>Hátrasorolt: <span id="statDemoted" style="color:var(--danger);">0</span></span>
         </div>
 
-        <!-- KERESŐ MEZŐ -->
         <div class="form-group">
             <input type="text" id="searchInput" placeholder="🔍 Keresés név vagy telefonszám alapján..." oninput="debouncedLoadPassengers()">
         </div>
@@ -448,6 +464,7 @@
     let calculatedSunset = "";
     let calculatedArrivalTime = "";
     let weatherChart = null;
+    let selectedPassengerId = null;
 
     document.addEventListener("DOMContentLoaded", function() {
         const todayStr = new Date().toISOString().split('T')[0];
@@ -455,7 +472,7 @@
         document.getElementById("pFlightDate").value = todayStr;
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js').then(() => console.log('SW registered')).catch(e => console.warn('SW failed', e));
+            navigator.serviceWorker.register('/service-worker.js').catch(e => console.warn('SW failed', e));
         }
     });
 
@@ -469,28 +486,66 @@
 
     const debouncedLoadPassengers = debounce(loadPassengers, 300);
 
-    // --- IDŐJÁRÁS & NAPNYUGTA LEKÉRDEZÉS ---
+    // --- 7 NAPOS HETI ELŐREJELZÉS ÉS RÉSZLETES IDŐJÁRÁS LEKÉRDEZÉS ---
     async function fetchWeather() {
         const container = document.getElementById("weatherContent");
+        const weekContainer = document.getElementById("weekContainer");
         const selectedDate = document.getElementById("weatherDate").value || new Date().toISOString().split('T')[0];
         
-        container.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Szél- és napnyugta adatok lekérése...</p>";
+        container.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Időjárás frissítése...</p>";
 
         try {
-            const startDate = selectedDate;
-            const endDate = selectedDate;
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAUNCH_SITE.lat}&longitude=${LAUNCH_SITE.lon}` +
-                        `&hourly=temperature_2m,windspeed_10m,windgusts_10m,winddirection_10m` +
-                        `&daily=sunset,temperature_2m_max` +
-                        `&start_date=${startDate}&end_date=${endDate}` +
-                        `&timezone=Europe%2FBudapest`;
+            const todayDate = new Date();
+            const weekUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LAUNCH_SITE.lat}&longitude=${LAUNCH_SITE.lon}` +
+                            `&hourly=temperature_2m,windspeed_10m,windgusts_10m,winddirection_10m` +
+                            `&daily=sunset,windgusts_10m_max,windspeed_10m_max,temperature_2m_max` +
+                            `&forecast_days=7` +
+                            `&timezone=Europe%2FBudapest`;
 
-            const res = await fetch(url);
-            if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
+            const res = await fetch(weekUrl);
+            if (!res.ok) throw new Error(`Weather API hiba: ${res.status}`);
             const data = await res.json();
 
             logEvent('weather.fetch.success', { date: selectedDate });
 
+            // 1. HETI RÁCS (7 NAP) RENDERELÉSE ÉS SZÍNEZÉSE
+            if (data.daily && data.daily.time) {
+                weekContainer.innerHTML = "";
+                data.daily.time.forEach((dayStr, idx) => {
+                    const d = new Date(dayStr);
+                    const dayName = d.toLocaleDateString('hu-HU', { weekday: 'short' });
+                    const dayNum = d.toLocaleDateString('hu-HU', { month: '2-digit', day: '2-digit' });
+                    const maxGust = Math.round(data.daily.windgusts_10m_max[idx]);
+
+                    let flyClass = "fly-ok";
+                    let flyLabel = "REPÜLHETŐ";
+                    if (maxGust > 25) {
+                        flyClass = "fly-no";
+                        flyLabel = "NEM REP.";
+                    } else if (maxGust > 18) {
+                        flyClass = "fly-warn";
+                        flyLabel = "KÉR DÉSES";
+                    }
+
+                    const isSelected = (dayStr === selectedDate) ? 'selected' : '';
+
+                    const dayCard = document.createElement('div');
+                    dayCard.className = `day-card ${flyClass} ${isSelected}`;
+                    dayCard.innerHTML = `
+                        <div class="day-name">${dayName}</div>
+                        <div class="day-date">${dayNum}</div>
+                        <div class="day-wind">${maxGust} <span style="font-size:9px;">km/h</span></div>
+                        <div class="day-status">${flyLabel}</div>
+                    `;
+                    dayCard.onclick = () => {
+                        document.getElementById("weatherDate").value = dayStr;
+                        fetchWeather();
+                    };
+                    weekContainer.appendChild(dayCard);
+                });
+            }
+
+            // 2. KIVÁLASZTOTT NAP RÉSZLETES ESTI ADATAI
             function findClosestHourIndexByDate(targetDate) {
                 if (!data.hourly || !data.hourly.time) return 0;
                 let closest = 0;
@@ -503,16 +558,16 @@
                 return closest;
             }
 
+            const dayIdx = data.daily.time.indexOf(selectedDate);
             let targetHour = 18;
             let arrivalDate = null;
 
-            if (data.daily && data.daily.sunset && data.daily.sunset[0]) {
-                const sunsetDate = new Date(data.daily.sunset[0]);
+            if (dayIdx !== -1 && data.daily.sunset && data.daily.sunset[dayIdx]) {
+                const sunsetDate = new Date(data.daily.sunset[dayIdx]);
                 arrivalDate = new Date(sunsetDate.getTime() - (90 * 60 * 1000));
                 
                 calculatedSunset = sunsetDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
                 calculatedArrivalTime = arrivalDate.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
-
                 targetHour = Math.max(0, sunsetDate.getHours() - 1);
             }
 
@@ -531,15 +586,14 @@
 
             if (windGust > 25 || windSpeed > 22) {
                 statusClass = "status-danger";
-                statusMsg = "🚫 Erős szél / Széllökés! Paratrike start kockázatos lehet.";
+                statusMsg = "🚫 Erős szél / Széllökés! A start kockázatos lehet.";
             } else if (windGust > 18 || windSpeed > 15) {
                 statusClass = "status-warn";
-                statusMsg = "⚠️ Mérsékelt / Élénk szél. Rutinos startot igényel.";
+                statusMsg = "⚠️ Mérsékelt szél. Tapasztalt startot igényel.";
             }
 
             const formattedDisplayDate = new Date(selectedDate).toLocaleDateString('hu-HU', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
-            // Óránkénti esti táblázat generálása (17:00 - 20:00)
             let hourlyRowsHTML = "";
             if (data.hourly && data.hourly.time) {
                 [17, 18, 19, 20].forEach(h => {
@@ -564,7 +618,7 @@
 
             container.innerHTML = `
                 <div style="font-size:12px; color:var(--brand-orange); text-align:center; font-weight:bold; margin-bottom:6px;">
-                    📅 ${formattedDisplayDate} (Esti sáv ~${targetHour}:00)
+                    📅 Részletezés: ${formattedDisplayDate} (~${targetHour}:00)
                 </div>
                 <div class="weather-grid">
                     <div class="weather-stat">
@@ -581,7 +635,7 @@
                     </div>
                     <div class="weather-stat">
                         <div class="val">${dirText}</div>
-                        <div class="lbl">Szélirány (~${windDirDegree}°)</div>
+                        <div class="lbl">Szélirány (${windDirDegree}°)</div>
                     </div>
                     <div class="weather-stat">
                         <div class="val" style="color:var(--brand-orange);">${calculatedSunset || '--:--'}</div>
@@ -589,7 +643,7 @@
                     </div>
                     <div class="weather-stat">
                         <div class="val" style="color:#10b981;">${calculatedArrivalTime || '--:--'}</div>
-                        <div class="lbl">⏰ Javasolt Érkezés</div>
+                        <div class="lbl">⏰ Érkezés (-1.5 óra)</div>
                     </div>
                 </div>
 
@@ -610,10 +664,8 @@
                 </table>` : ''}
 
                 <div class="status-banner ${statusClass}">${statusMsg}</div>
-                <button class="btn btn-secondary btn-full" style="margin-top:10px;" onclick="fetchWeather()">Frissítés</button>
             `;
 
-            // Chart kirajzolás
             if (data.hourly && data.hourly.time) {
                 const times = [];
                 const gusts = [];
@@ -643,7 +695,7 @@
         } catch (err) {
             console.error(err);
             logEvent('weather.fetch.error', { error: err.message });
-            container.innerHTML = "<p style='color:var(--danger); text-align:center;'>Hiba történt az időjárási adatok lekérésekor.</p>";
+            container.innerHTML = "<p style='color:var(--danger); text-align:center;'>Hiba történt az időjárás lekérésekor.</p>";
         }
     }
 
@@ -666,7 +718,7 @@
             document.getElementById("rawSmsInput").value = text;
             parseSmsText();
         } catch (err) {
-            alert("Nem sikerült olvasni a vágólapot. Illeszd be kézzel a szövegdobozba!");
+            alert("Vágólap olvasása sikertelen. Illeszd be kézzel!");
         }
     }
 
@@ -757,7 +809,7 @@
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = 'events.csv';
+        a.href = url; a.download = 'skyride_events.csv';
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -784,6 +836,7 @@
             gift: document.getElementById("pGift").value,
             voucher: document.getElementById("pVoucher").value,
             attempts: 0,
+            lastSmsDate: null,
             createdAt: new Date().toLocaleDateString('hu-HU')
         };
 
@@ -847,7 +900,7 @@
                     <div class="passenger-header">
                         <span class="passenger-name">${p.name} (${p.weight} kg)</span>
                         <span class="badge ${isDemoted ? 'badge-demoted' : 'badge-active'}">
-                            ${isDemoted ? '⚠️ Hátrasorolva (3+ megkeresés)' : 'Aktív'}
+                            ${isDemoted ? '⚠️ Hátrasorolva (3+ próba)' : 'Aktív'}
                         </span>
                     </div>
                     <div style="font-size:13px; color:var(--text-muted); line-height:1.5;">
@@ -855,11 +908,13 @@
                         📅 <strong>Tervezett dátum:</strong> <span style="color:#ffffff; font-weight:bold;">${formattedFlightDate}</span><br>
                         📝 <strong>Megjegyzés:</strong> ${p.period || 'Nincs'}<br>
                         🎲 <strong>Próbálkozások:</strong> ${p.attempts} / 3<br>
+                        ${p.lastSmsDate ? `<span class="badge badge-sms">📩 SMS elküldve: ${p.lastSmsDate}</span> ` : ''}
                         ${p.gift === 'igen' ? '<span class="badge badge-gift">🎁 Ajándék</span> ' : ''}
                         ${p.voucher === 'igen' ? '<span class="badge badge-voucher">🎟️ Voucher kért</span>' : ''}
                     </div>
                     <div class="passenger-actions">
-                        <button class="btn btn-secondary" style="font-size:12px; padding:6px 10px;" onclick="selectPassengerForSms('${p.phone}', '${p.name.replace(/'/g, "\\'")}')">📩 SMS Kiválasztása</button>
+                        <button class="btn btn-secondary" style="font-size:12px; padding:6px 10px;" onclick="selectPassengerForSms('${p.id}', '${p.phone}', '${p.name.replace(/'/g, "\\'")}')">📩 SMS Kijelölése</button>
+                        <button class="btn btn-secondary" style="font-size:12px; padding:6px 10px;" onclick="markSmsSent(${p.id})">✅ SMS Küldve</button>
                         <button class="btn btn-secondary" style="font-size:12px; padding:6px 10px;" onclick="addAttempt(${p.id})">🎲 +1 Dobás</button>
                         <a class="btn btn-success" style="font-size:12px; padding:6px 10px;" href="tel:${p.phone}">📞 Hívás</a>
                         <button class="btn btn-danger" style="font-size:12px; padding:6px 10px; margin-left:auto;" onclick="deletePassenger(${p.id})">🗑️ Törlés</button>
@@ -870,19 +925,32 @@
         };
     }
 
-    function selectPassengerForSms(phone, name) {
+    function selectPassengerForSms(id, phone, name) {
+        selectedPassengerId = id;
         document.getElementById("targetPhone").value = phone;
-        const msgBox = document.getElementById("outputMsg");
-        if (msgBox.value) {
-            msgBox.value = msgBox.value.replace(/^Szia\s*[^!]*!/, `Szia ${name}!`);
-        }
+        document.getElementById("targetName").value = name;
         document.getElementById("targetPhone").scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function markSmsSent(id) {
+        const tx = db.transaction(["passengers"], "readwrite");
+        const store = tx.objectStore("passengers");
+        const getReq = store.get(id);
+        getReq.onsuccess = function() {
+            const data = getReq.result;
+            const nowStr = new Date().toLocaleDateString('hu-HU') + ' ' + new Date().toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'});
+            data.lastSmsDate = nowStr;
+            store.put(data);
+            logEvent('passenger.sms_sent_marked', { id: id, name: data.name, time: nowStr });
+        };
+        tx.oncomplete = function() {
+            loadPassengers();
+        };
     }
 
     function addAttempt(id) {
         const tx = db.transaction(["passengers"], "readwrite");
         const store = tx.objectStore("passengers");
-        
         const getReq = store.get(id);
         getReq.onsuccess = function() {
             const data = getReq.result;
@@ -890,7 +958,6 @@
             store.put(data);
             logEvent('passenger.attempt', { id: id, attempts: data.attempts });
         };
-
         tx.oncomplete = function() {
             loadPassengers();
         };
@@ -907,16 +974,21 @@
         }
     }
 
-    // --- SABLON GENERÁTOROK ---
+    // --- SZÖVEGGENERÁLÓ SEGÉDFUNKCIÓK (A PONTOS SABLONOKKAL) ---
+    function getNameGreeting() {
+        const name = document.getElementById("targetName").value.trim();
+        return name ? `Szia ${name}!` : 'Szia!';
+    }
+
     function generateDataRequestTemplate() {
-        const currentMonthName = new Date().toLocaleString('hu-HU', { month: 'long' });
-        const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak / dátum (pl. ${currentMonthName} 15.)\n\nKöszönöm!`;
-        
+        const greeting = getNameGreeting();
+        const msg = `${greeting} A Skyride repülésed regisztrációjához kérlek, válaszban küldd vissza an alábbi adatokat:\n\n1. Neved:\n2. Súlyod (kg):\n3. Telefonszámod:\n4. Tervezett időszak / hónap:\n\nFontos tudnivalók a repülésről:\n📍 Helyszín & Időpont: A repülésekre mindig a kiválasztott napon, napnyugta előtt kb. 1,5 órával kerül sor (a legnyugodtabb esti szélviszonyok között).\n💳 Ár & Tartalom: 40.000 Ft/fő, amely tartalmazza magát a repülést, a névre szóló voucher kártyát, valamint a 3-4 perces, exkluzív 3D emlékvideót.\n💨 Biztonság & Időjárás: A repülés erősen szélérzékeny. A maximális biztonság érdekében a sorrend és az időpontok az időjárási ablakok függvényében rugalmasan alakulhatnak.\n🎯 Szervezés (3 lehetőség): A szezon során legfeljebb 3 alkalommal ajánlunk fel konkrét repülési időpontot. Ha a 3. felajánlott nap sem megfelelő számodra, a regisztrációd a várólista végére kerül, hogy a többi várakozónak is biztosítani tudjuk a haladást.\n\nKöszönjük a megértést és a közreműködést!`;
         document.getElementById("outputMsg").value = msg;
         logEvent('template.generate', { template: 'data-request' });
     }
 
     function generateFlightInviteTemplate() {
+        const greeting = getNameGreeting();
         const tempCategory = document.getElementById("tempCategory").value;
         const selectedDate = document.getElementById("weatherDate").value;
         
@@ -936,15 +1008,24 @@
             clothingAdvice = "Könnyű nyári öltözet és zárt cipő (hozz magaddal napszemüveget is!).";
         }
 
-        const msg = `Szia! Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n📅 Dátum: ${formattedDateStr}\n⏰ Érkezési idő: ${meetingTime} (napnyugta előtt)\n📍 Helyszín: ${LAUNCH_SITE.mapsUrl}\n\n${clothingAdvice}\n\nKérlek válaszolj, hogy biztosan számolhassunk veled. Köszi!`;
-        
+        const msg = `${greeting} Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n📅 Dátum: ${formattedDateStr}\n⏰ Érkezési idő: ${meetingTime} (napnyugta előtt)\n📍 Helyszín: ${LAUNCH_SITE.mapsUrl}\n\n👗 Öltözet: ${clothingAdvice}\n\nKérlek válaszolj, hogy biztosan számolhassunk veled. Köszi!`;
         document.getElementById("outputMsg").value = msg;
         logEvent('template.generate', { template: 'flight-invite' });
     }
 
-    function generateDemoteTemplate() {
-        const msg = `Szia! Mivel a mai napra felajánlott harmadik időpont sem volt megfelelő számodra, a regisztrációd a várólista végére került. Amint új lehetőség nyílik, értesítünk. Köszönjük a megértést.`;
+    function generateInfoTemplate() {
+        const greeting = getNameGreeting();
+        const selectedDate = document.getElementById("weatherDate").value;
+        let dateStr = selectedDate ? new Date(selectedDate).toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'short' }) : 'a megbeszélt napra';
 
+        const msg = `${greeting} Tájékoztatni szeretnélek a lefoglalt Skyride repülésedről:\n\n💨 Időjárás & Biztonság: A legfrissebb meteorológiai előrejelzések alapján ${dateStr} a vártnál erősebb széllökések várhatók. Mivel nálunk a te biztonságod az első, ezért ezen a napon a repülést elhalasztjuk.\n\n⏳ Mi történik most? Folyamatosan figyeljük az időjárást, és amint megnyílik a következő ideális, szélcsendes esti repülési ablak (napnyugta előtt ~1,5 órával), azonnal jelentkezünk a következő felajánlható időponttal!\n\nKöszönjük a türelmedet és a megértésedet!`;
+        document.getElementById("outputMsg").value = msg;
+        logEvent('template.generate', { template: 'info-delay' });
+    }
+
+    function generateDemoteTemplate() {
+        const greeting = getNameGreeting();
+        const msg = `${greeting} Mivel a felajánlott harmadik időpont sem volt megfelelő számodra, a regisztrációd a várólista végére került. Amint új lehetőség nyílik és a többi várakozó is sorra került, újra jelentkezünk. Köszönjük a megértést.`;
         document.getElementById("outputMsg").value = msg;
         logEvent('template.generate', { template: 'demote' });
     }
@@ -970,6 +1051,10 @@
             return;
         }
         
+        if (selectedPassengerId) {
+            markSmsSent(selectedPassengerId);
+        }
+
         logEvent('sms.open', { length: msg.length, target: phone });
         
         if (phone) {
