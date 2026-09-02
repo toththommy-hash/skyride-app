@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skyride Hungary – Pilot Dashboard Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-dark: #121212;
@@ -257,6 +259,14 @@
             padding: 12px;
             margin-bottom: 14px;
         }
+
+        .event-log {
+            background: #1f2937;
+            padding: 10px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -283,6 +293,9 @@
         <div id="weatherContent">
             <button class="btn btn-secondary btn-full" onclick="fetchWeather()">Szél- és Napnyugta Adatok Frissítése</button>
         </div>
+
+        <!-- Grafikon (látható, ha vannak hourly adatok) -->
+        <canvas id="weatherChart" style="width:100%; height:120px; display:none; margin-top:12px;"></canvas>
     </div>
 
     <!-- 2. SMART SMS-VÁLASZ FELDOLGOZÓ & REGISZTRÁCIÓ -->
@@ -388,10 +401,17 @@
 
         <!-- KERESŐ MEZŐ -->
         <div class="form-group">
-            <input type="text" id="searchInput" placeholder="🔍 Keresés név vagy telefonszám alapján..." oninput="loadPassengers()">
+            <input type="text" id="searchInput" placeholder="🔍 Keresés név vagy telefonszám alapján..." oninput="debouncedLoadPassengers()">
         </div>
 
         <div id="passengerList">Betöltés...</div>
+
+        <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+            <button class="btn btn-secondary" onclick="toggleEventLog()">📝 Eseménynapló</button>
+            <button class="btn" onclick="exportEventsCSV()">⬇️ Események exportálása</button>
+        </div>
+
+        <div id="eventLog" class="event-log" style="display:none; margin-top:10px; max-height:220px; overflow:auto;"></div>
     </div>
 </div>
 
@@ -405,13 +425,31 @@
 
     let calculatedSunset = "";
     let calculatedArrivalTime = "";
+    let weatherChart = null;
 
     // Alapértelmezett dátum beállítása mai napra
     document.addEventListener("DOMContentLoaded", function() {
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById("weatherDate").value = todayStr;
         document.getElementById("pFlightDate").value = todayStr;
+
+        // Service Worker regisztráció (PWA alapok)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').then(() => console.log('SW registered')).catch(e => console.warn('SW failed', e));
+        }
     });
+
+    // Debounce helper
+    function debounce(fn, delay) {
+        let t;
+        return function(...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    const debouncedLoadPassengers = debounce(loadPassengers, 300);
+
 // --- IDŐJÁRÁS & NAPNYUGTA LEKÉRDEZÉS (ESTI REPÜLÉSI ABLAKRA FINOMHANGOLVA) ---
     async function fetchWeather() {
         const container = document.getElementById("weatherContent");
@@ -431,6 +469,8 @@
             const res = await fetch(url);
             if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
             const data = await res.json();
+
+            logEvent('weather.fetch.success', { date: selectedDate });
 
             // Segédfüggvény: megkeresi az óránkénti adat indexét a kiválasztott nap és óra alapján
             let arrivalDate = null;
@@ -523,8 +563,38 @@
                 <div class="status-banner ${statusClass}">${statusMsg}</div>
                 <button class="btn btn-secondary btn-full" style="margin-top:10px;" onclick="fetchWeather()">Frissítés</button>
             `;
+
+            // Chart: hourly windgusts for the selected day
+            if (data.hourly && data.hourly.time) {
+                const times = [];
+                const gusts = [];
+                for (let i = 0; i < data.hourly.time.length; i++) {
+                    if (typeof data.hourly.time[i] === 'string' && data.hourly.time[i].startsWith(selectedDate)) {
+                        times.push(data.hourly.time[i].slice(11,16));
+                        gusts.push(data.hourly.windgusts_10m ? data.hourly.windgusts_10m[i] : 0);
+                    }
+                }
+                const canvas = document.getElementById('weatherChart');
+                if (times.length > 0) {
+                    canvas.style.display = 'block';
+                    if (weatherChart) weatherChart.destroy();
+                    weatherChart = new Chart(canvas, {
+                        type: 'line',
+                        data: {
+                            labels: times,
+                            datasets: [{ label: 'Széllökés (km/h)', data: gusts, borderColor: '#ff6b00', backgroundColor: 'rgba(255,107,0,0.08)', tension:0.3 }]
+                        },
+                        options: { plugins:{legend:{display:false}}, scales:{x:{display:true}, y:{beginAtZero:true}} }
+                    });
+                } else {
+                    const canvas = document.getElementById('weatherChart');
+                    canvas.style.display = 'none';
+                }
+            }
+
         } catch (err) {
             console.error(err);
+            logEvent('weather.fetch.error', { error: err.message });
             container.innerHTML = "<p style='color:var(--danger); text-align:center;'>Hiba történt az időjárási adatok lekérésekor.</p>";
         }
     }
@@ -585,12 +655,15 @@
 
     // --- INDEXEDDB UTAS ADATBÁZIS ---
     let db;
-    const dbReq = indexedDB.open("SkyrideDB_V4", 1);
+    const dbReq = indexedDB.open("SkyrideDB_V5", 2);
 
     dbReq.onupgradeneeded = function(e) {
         db = e.target.result;
         if (!db.objectStoreNames.contains("passengers")) {
             db.createObjectStore("passengers", { keyPath: "id", autoIncrement: true });
+        }
+        if (!db.objectStoreNames.contains("events")) {
+            db.createObjectStore("events", { keyPath: "id", autoIncrement: true });
         }
     };
 
@@ -599,6 +672,59 @@
         loadPassengers();
         fetchWeather();
     };
+
+    function logEvent(type, meta = {}) {
+        try {
+            const tx = db.transaction(["events"], "readwrite");
+            const store = tx.objectStore("events");
+            store.add({ type, meta, timestamp: new Date().toISOString() });
+        } catch (err) {
+            console.warn('logEvent failed', err);
+        }
+    }
+
+    function loadEvents(limit = 100) {
+        return new Promise((resolve) => {
+            const tx = db.transaction(["events"], "readonly");
+            const store = tx.objectStore("events");
+            const req = store.openCursor(null, 'prev');
+            const out = [];
+            req.onsuccess = function(e) {
+                const cursor = e.target.result;
+                if (cursor && out.length < limit) {
+                    out.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    resolve(out);
+                }
+            };
+            req.onerror = () => resolve(out);
+        });
+    }
+
+    async function exportEventsCSV() {
+        const events = await loadEvents(1000);
+        const rows = [['timestamp', 'type', 'meta']];
+        events.reverse().forEach(ev => rows.push([ev.timestamp, ev.type, JSON.stringify(ev.meta).replace(/\n/g,' ')]));
+        const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'events.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    async function toggleEventLog() {
+        const el = document.getElementById('eventLog');
+        if (el.style.display === 'none' || !el.style.display) {
+            const events = await loadEvents(200);
+            el.innerHTML = events.map(e => `<div style="padding:6px 0; border-bottom:1px solid #2b2b2b;"><strong>${e.timestamp}</strong> — <em>${e.type}</em> — ${JSON.stringify(e.meta)}</div>`).join('');
+            el.style.display = 'block';
+        } else {
+            el.style.display = 'none';
+        }
+    }
 
     document.getElementById("passengerForm").addEventListener("submit", function(e) {
         e.preventDefault();
@@ -622,6 +748,7 @@
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById("pFlightDate").value = todayStr;
             loadPassengers();
+            logEvent('passenger.create', { name: passenger.name, phone: passenger.phone });
         };
     });
 
@@ -708,6 +835,7 @@
             const data = getReq.result;
             data.attempts = (data.attempts || 0) + 1;
             store.put(data);
+            logEvent('passenger.attempt', { id: id, attempts: data.attempts });
         };
 
         tx.oncomplete = function() {
@@ -721,6 +849,7 @@
             tx.objectStore("passengers").delete(id);
             tx.oncomplete = function() {
                 loadPassengers();
+                logEvent('passenger.delete', { id });
             };
         }
     }
@@ -731,6 +860,7 @@
         const msg = `Szia! A Skyride repülésed regisztrációjához kérlek küldd vissza az alábbi adatokat:\n\nNév:\nSúly (kg):\nTelefonszám:\nTervezett időszak / dátum (pl. ${currentMonthName} 15.)\n\nKöszönöm!`;
         
         document.getElementById("outputMsg").value = msg;
+        logEvent('template.generate', { template: 'data-request' });
     }
 
     function generateFlightInviteTemplate() {
@@ -756,12 +886,14 @@
         const msg = `Szia! Kedvező az időjárás, így szeretnélek hívni a megbeszélt Skyride repülésre!\n\n📅 Dátum: ${formattedDateStr}\n⏰ Érkezési idő: ${meetingTime} (napnyugta előtt)\n📍 Helyszín: ${LAUNCH_SITE.mapsUrl}\n\n${clothingAdvice}\n\nKérlek válaszolj, hogy biztosan számolhassunk veled. Köszi!`;
         
         document.getElementById("outputMsg").value = msg;
+        logEvent('template.generate', { template: 'flight-invite' });
     }
 
     function generateDemoteTemplate() {
-        const msg = `Szia! Mivel a mai napra felajánlott időpont sem volt megfelelő számodra, a szabályzatunknak megfelelően a regisztrációdat automatikusan a várólistánk végére soroltuk. Amint új lehetőség nyílik, értesítünk. Köszönjük a megértést.`;
+        const msg = `Szia! Mivel a mai napra felajánlott harmadik időpont sem volt megfelelő számodra, a regisztrációd a várólista végére került. Amint új lehetőség nyílik, értesítünk. Köszönjük a megértést.`;
 
         document.getElementById("outputMsg").value = msg;
+        logEvent('template.generate', { template: 'demote' });
     }
 
     function copyTemplate() {
@@ -773,6 +905,7 @@
         textarea.select();
         document.execCommand("copy");
         alert("Üzenet másolva a vágólapra!");
+        logEvent('template.copy', {});
     }
 
     function sendDirectSMS() {
@@ -781,6 +914,7 @@
             alert("Először generálj egy sablont!");
             return;
         }
+        logEvent('sms.open', { length: msg.length });
         window.location.href = `sms:?body=${encodeURIComponent(msg)}`;
     }
 </script>
